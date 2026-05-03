@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Neo-Engine | نظام التحكم الاحترافي</title>
+    <title>Neo-Engine | نظام تحريك XYZ</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
@@ -13,12 +13,10 @@
         .input-box { background: #222; padding: 30px; border-radius: 15px; border: 1px solid #deff9a; text-align: center; }
         input[type="text"] { padding: 12px; width: 250px; border-radius: 5px; border: none; margin: 15px 0; font-size: 16px; }
         .layout { display: grid; grid-template-columns: 200px 1fr 280px; height: 100vh; visibility: hidden; }
-        .sidebar { background: #202020; padding: 15px; border: 1px solid #333; overflow-y: auto; }
+        .sidebar { background: #202020; padding: 15px; border: 1px solid #333; }
         #canvas-container { background: #393939; position: relative; }
-        .btn { background: #deff9a; color: black; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 5px 0; width: 100%; }
-        .mode-btn { background: #444; color: white; border: 1px solid #666; padding: 5px; cursor: pointer; width: 30%; font-size: 12px; }
-        .active-mode { background: #deff9a; color: black; }
-        label { display: block; margin-top: 15px; font-size: 14px; color: #aaa; }
+        .btn { background: #deff9a; color: black; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .info-panel { background: #111; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; color: #deff9a; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -26,37 +24,29 @@
 <div id="splash">
     <div class="input-box">
         <h1 style="color: #deff9a;">NEO-ENGINE</h1>
-        <input type="text" id="pName" placeholder="اسم اللعبة...">
+        <input type="text" id="pName" placeholder="اسم المشروع...">
         <br>
-        <button class="btn" onclick="start()">بدء التصنيع</button>
+        <button class="btn" onclick="start()">دخول بيئة التصنيع</button>
     </div>
 </div>
 
 <div class="layout" id="editor">
     <aside class="sidebar">
         <h4 style="color: #deff9a;">Hierarchy</h4>
-        <div style="background: #333; padding: 5px; border-radius: 3px;">📦 Cube</div>
+        <p>📦 Cube (المكعب)</p>
     </aside>
     
     <main id="canvas-container"></main>
     
     <aside class="sidebar">
         <h4 style="color: #deff9a;">Inspector</h4>
+        <p style="font-size: 13px; color: #aaa;">تحكم في المحاور مباشرة من خلال سحب الأسهم (Red: X, Green: Y, Blue: Z)</p>
         
-        <label>وضع التحكم (Transform Mode):</label>
-        <div style="display: flex; gap: 5px; margin-top: 5px;">
-            <button class="mode-btn active-mode" id="m-translate" onclick="setMode('translate')">تحريك</button>
-            <button class="mode-btn" id="m-rotate" onclick="setMode('rotate')">تدوير</button>
-            <button class="mode-btn" id="m-scale" onclick="setMode('scale')">تكبير</button>
-        </div>
-
-        <label>إحداثيات الموقع (X, Y, Z):</label>
-        <div id="pos-info" style="font-family: monospace; color: #deff9a; background: #111; padding: 10px; margin-top: 5px; border-radius: 5px;">
+        <div class="info-panel" id="pos-display">
             X: 0.00 | Y: 0.50 | Z: 0.00
         </div>
 
-        <label>خيارات إضافية:</label>
-        <button class="btn" style="background: #ff5555; color: white;" onclick="resetObject()">إعادة ضبط</button>
+        <button class="btn" style="background: #444; color: white;" onclick="resetCamera()">إعادة ضبط الكاميرا</button>
     </aside>
 </div>
 
@@ -72,78 +62,67 @@
     function init3D() {
         const container = document.getElementById('canvas-container');
 
+        // 1. المشهد
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x393939);
 
+        // 2. الكاميرا
         camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.set(5, 5, 5);
 
+        // 3. المحرك
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         container.appendChild(renderer.domElement);
 
-        // الإضاءة
+        // 4. الإضاءة
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(10, 10, 10);
         scene.add(light);
         scene.add(new THREE.AmbientLight(0x404040, 2));
 
-        // الأرضية والمحاور
-        scene.add(new THREE.GridHelper(20, 20, 0x888888, 0x444444));
-        const axesHelper = new THREE.AxesHelper(5);
-        scene.add(axesHelper);
+        // 5. الأرضية (Grid) والمحاور الأساسية
+        const grid = new THREE.GridHelper(20, 20, 0x888888, 0x444444);
+        scene.add(grid);
 
-        // المكعب
+        // 6. المكعب
         const geometry = new THREE.BoxGeometry(1, 1, 1);
         const material = new THREE.MeshPhongMaterial({ color: 0xdeff9a });
         cube = new THREE.Mesh(geometry, material);
         cube.position.y = 0.5;
         scene.add(cube);
 
-        // التحكم بالكاميرا
+        // 7. تحريك الكاميرا (Orbit)
         controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-        // --- إضافة أدوات التحكم بالمجسم (Gizmo) ---
+        // 8. --- إضافة أداة تحريك المحاور (Transform Gizmo) مثل بلندر ---
         transformControls = new THREE.TransformControls(camera, renderer.domElement);
-        transformControls.attach(cube);
+        transformControls.attach(cube); // ربط الأداة بالمكعب
         scene.add(transformControls);
 
-        // تعطيل دوران الكاميرا أثناء سحب المجسم
+        // منع تداخل الكاميرا مع سحب المحاور
         transformControls.addEventListener('dragging-changed', function (event) {
             controls.enabled = !event.value;
         });
 
-        // تحديث معلومات الإحداثيات في اللوحة اليمنى عند التحريك
-        transformControls.addEventListener('change', updateInfo);
+        // تحديث أرقام الموقع عند التحريك
+        transformControls.addEventListener('change', () => {
+            const p = cube.position;
+            document.getElementById('pos-display').innerHTML = 
+                `X: ${p.x.toFixed(2)} | Y: ${p.y.toFixed(2)} | Z: ${p.z.toFixed(2)}`;
+        });
 
         animate();
-    }
-
-    function setMode(mode) {
-        transformControls.setMode(mode);
-        // تحديث شكل الأزرار
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active-mode'));
-        document.getElementById('m-' + mode).classList.add('active-mode');
-    }
-
-    function updateInfo() {
-        if(cube) {
-            const p = cube.position;
-            document.getElementById('pos-info').innerHTML = 
-                `X: ${p.x.toFixed(2)} | Y: ${p.y.toFixed(2)} | Z: ${p.z.toFixed(2)}`;
-        }
-    }
-
-    function resetObject() {
-        cube.position.set(0, 0.5, 0);
-        cube.rotation.set(0, 0, 0);
-        cube.scale.set(1, 1, 1);
-        updateInfo();
     }
 
     function animate() {
         requestAnimationFrame(animate);
         renderer.render(scene, camera);
+    }
+
+    function resetCamera() {
+        camera.position.set(5, 5, 5);
+        controls.update();
     }
 
     window.addEventListener('resize', () => {
