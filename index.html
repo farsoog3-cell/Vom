@@ -2,87 +2,70 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Neo-Engine Pro | World Builder</title>
+    <title>Neo-Engine Pro | Ultimate Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
     <style>
-        :root { --primary: #deff9a; --dark: #111; --panel: #1a1a1a; --border: #333; }
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; }
+        :root { --primary: #deff9a; --glass: rgba(20, 20, 20, 0.85); --border: rgba(222, 255, 154, 0.3); }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #050505; color: white; font-family: sans-serif; }
         
-        /* الواجهة الرئيسية */
-        .app { display: grid; grid-template-columns: 250px 1fr 280px; height: 100vh; }
+        /* تصميم أيقونات الزوايا */
+        .corner-panel {
+            position: absolute; background: var(--glass); padding: 15px; border-radius: 15px;
+            border: 1px solid var(--border); backdrop-filter: blur(10px); z-index: 100;
+            display: flex; flex-direction: column; gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        
+        .top-left { top: 20px; left: 20px; }   /* أدوات التعديل (تحريك/تدوير) */
+        .top-right { top: 20px; right: 20px; } /* إضافة عناصر (شجر/أرض/شمس) */
+        .bottom-left { bottom: 20px; left: 20px; } /* حالة الكائن المختار */
+        .bottom-right { bottom: 20px; right: 20px; } /* نوع المادة (صلب/قماش) */
 
-        /* الألواح الجانبية */
-        .panel { background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; padding: 15px; z-index: 10; }
-        .panel-title { font-size: 12px; color: var(--primary); text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        .icon-btn {
+            background: #222; border: 1px solid #444; color: white; padding: 10px;
+            border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px;
+        }
+        .icon-btn:hover { background: var(--primary); color: black; }
+        .icon-btn.active { background: var(--primary); color: black; border-color: white; }
 
-        /* شريط الأدوات */
-        .toolbar { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: var(--panel); padding: 8px; border-radius: 12px; display: flex; gap: 10px; border: 1px solid var(--border); z-index: 20; }
-        .t-btn { background: #252525; border: 1px solid #444; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
-        .t-btn:hover { border-color: var(--primary); }
-        .t-btn.active { background: var(--primary); color: black; }
-
-        /* التحكم بالخصائص */
-        .control-item { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; }
-        select, input[type="color"] { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 5px; border-radius: 4px; }
-
-        #viewport { position: relative; background: #000; }
-        .phys-btn { flex: 1; padding: 10px; font-size: 11px; cursor: pointer; border: 1px solid #444; background: #222; color: white; }
-        .phys-btn.active { background: #3498db; }
+        #viewport { width: 100vw; height: 100vh; }
+        .label { font-size: 10px; color: var(--primary); text-transform: uppercase; margin-bottom: 2px; }
     </style>
 </head>
 <body>
 
-<div class="app">
-    <aside class="panel">
-        <span class="panel-title">إضافة عناصر البيئة</span>
-        <div class="control-item">
-            <button class="t-btn" style="width: 100%;" onclick="addGround()">🌿 إضافة أرضية عشبية</button>
-        </div>
-        <div class="control-item">
-            <button class="t-btn" style="width: 100%;" onclick="addTree()">🌳 إضافة شجرة</button>
-        </div>
-        <div class="control-item">
-            <button class="t-btn" style="width: 100%;" onclick="addSun()">☀️ إضافة شمس وظلال</button>
-        </div>
-        <div class="control-item">
-            <button class="t-btn" style="width: 100%;" onclick="setSky()">☁️ سماء العالم</button>
-        </div>
-        <span class="panel-title" style="margin-top:20px;">المجسمات</span>
-        <button class="t-btn" onclick="addShape('cube')">+ مكعب</button>
-        <button class="t-btn" onclick="addShape('sphere')" style="margin-top:5px;">+ كرة</button>
-    </aside>
+    <div class="corner-panel top-left">
+        <span class="label">أدوات التحكم</span>
+        <button class="icon-btn active" id="btn-t" onclick="setMode('translate')">Transform (G)</button>
+        <button class="icon-btn" id="btn-r" onclick="setMode('rotate')">Rotate (R)</button>
+        <button class="icon-btn" id="btn-s" onclick="setMode('scale')">Scale (S)</button>
+    </div>
 
-    <main id="viewport">
-        <div class="toolbar">
-            <button class="t-btn active" id="btn-t" onclick="setMode('translate')">Move</button>
-            <button class="t-btn" id="btn-r" onclick="setMode('rotate')">Rotate</button>
-            <button class="t-btn" id="btn-s" onclick="setMode('scale')">Scale</button>
-        </div>
-    </main>
+    <div class="corner-panel top-right">
+        <span class="label">إضافة للعالم</span>
+        <button class="icon-btn" onclick="addGround()">🟩 أرضية</button>
+        <button class="icon-btn" onclick="addTree()">🌳 شجرة</button>
+        <button class="icon-btn" onclick="addSun()">☀️ شمس وظل</button>
+        <button class="icon-btn" onclick="addShape('cube')">📦 مكعب</button>
+        <button class="icon-btn" onclick="addShape('sphere')">🔮 كرة</button>
+    </div>
 
-    <aside class="panel">
-        <span class="panel-title">الخصائص (Inspector)</span>
-        <div class="control-item">
-            <label>نوع المادة / الفيزياء:</label>
-            <div style="display: flex; gap: 2px;">
-                <button class="phys-btn active" id="p-solid" onclick="setPhys('solid')">صلب</button>
-                <button class="phys-btn" id="p-rubber" onclick="setPhys('rubber')">مطاط</button>
-                <button class="phys-btn" id="p-cloth" onclick="setPhys('cloth')">قماش</button>
-            </div>
-        </div>
-        <div class="control-item">
-            <label>اللون:</label>
-            <input type="color" id="col-p" oninput="updateColor(this.value)">
-        </div>
-        <div class="control-item" id="pos-ui">
-            <label>الموقع XYZ:</label>
-            <div style="color: var(--primary); font-family: monospace; font-size: 13px;">0, 0, 0</div>
-        </div>
-    </aside>
-</div>
+    <div class="corner-panel bottom-left">
+        <span class="label">بيانات العنصر</span>
+        <div id="pos-info" style="font-family: monospace; font-size: 12px;">X:0 Y:0 Z:0</div>
+        <input type="color" id="color-p" oninput="updateColor(this.value)" style="width:100%; height:25px; cursor:pointer;">
+        <button class="icon-btn" style="background:#441111;" onclick="deleteObj()">حذف</button>
+    </div>
+
+    <div class="corner-panel bottom-right">
+        <span class="label">نوع المادة</span>
+        <button class="icon-btn active" id="p-solid" onclick="setPhys('solid')">صلب (Solid)</button>
+        <button class="icon-btn" id="p-rubber" onclick="setPhys('rubber')">مطاط (Rubber)</button>
+        <button class="icon-btn" id="p-cloth" onclick="setPhys('cloth')">قماش (Cloth)</button>
+    </div>
+
+    <div id="viewport"></div>
 
 <script>
     let scene, camera, renderer, orbit, transform, raycaster, mouse;
@@ -93,18 +76,20 @@
 
     function init() {
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87ceeb); // سماء افتراضية
+        scene.background = new THREE.Color(0x0a0a0a);
         
         camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(12, 12, 12);
+        camera.position.set(10, 10, 10);
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth - 530, window.innerHeight); // حساب مساحة الألواح
+        renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.getElementById('viewport').appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        // --- إعادة الشبكة والضوء الأساسي ---
+        const grid = new THREE.GridHelper(30, 30, 0x333333, 0x222222);
+        scene.add(grid);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
         orbit = new THREE.OrbitControls(camera, renderer.domElement);
         orbit.enableDamping = true;
@@ -115,104 +100,88 @@
 
         raycaster = new THREE.Raycaster();
         mouse = new THREE.Vector2();
-        window.addEventListener('mousedown', onSelect);
+        window.addEventListener('mousedown', (e) => {
+            if(e.target.tagName !== 'CANVAS') return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(objects, true);
+            if(intersects.length > 0) select(intersects[0].object);
+        });
+
+        // إضافة المكعب الأساسي الذي كان موجوداً
+        addShape('cube');
 
         animate();
     }
 
-    // --- وظائف البيئة ---
+    // وظائف الإضافة
     function addGround() {
-        const geo = new THREE.PlaneGeometry(50, 50);
-        const mat = new THREE.MeshStandardMaterial({ color: 0x348C31 });
-        const ground = new THREE.Mesh(geo, mat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
+        const geo = new THREE.BoxGeometry(40, 0.2, 40);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x1a3311 });
+        const g = new THREE.Mesh(geo, mat);
+        g.receiveShadow = true;
+        scene.add(g);
+        objects.push(g);
     }
 
     function addTree() {
         const group = new THREE.Group();
-        // الجذع
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2), new THREE.MeshStandardMaterial({color: 0x8B4513}));
-        trunk.position.y = 1;
-        trunk.castShadow = true;
-        // الأوراق
-        const leaves = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 8), new THREE.MeshStandardMaterial({color: 0x228B22}));
-        leaves.position.y = 2.5;
-        leaves.castShadow = true;
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2), new THREE.MeshStandardMaterial({color: 0x4d2600}));
+        const leaves = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 8), new THREE.MeshStandardMaterial({color: 0x006400}));
+        trunk.position.y = 1; leaves.position.y = 2.5;
         group.add(trunk, leaves);
-        group.position.set(Math.random()*10 - 5, 0, Math.random()*10 - 5);
+        group.position.set(Math.random()*10-5, 0, Math.random()*10-5);
         scene.add(group);
-        objects.push(trunk); // نجعل الجذع قابل للإمساك
+        objects.push(trunk, leaves);
     }
 
     function addSun() {
-        const sun = new THREE.DirectionalLight(0xffffff, 1);
-        sun.position.set(10, 20, 10);
-        sun.castShadow = true;
-        sun.shadow.mapSize.width = 2048;
-        sun.shadow.mapSize.height = 2048;
-        scene.add(sun);
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(10, 20, 10);
+        light.castShadow = true;
+        scene.add(light);
+        scene.background = new THREE.Color(0x87ceeb); // تحويل السماء لنهار
     }
 
-    function setSky() {
-        scene.background = new THREE.Color(0x111122); // سماء ليلية كمثال
-        scene.fog = new THREE.Fog(0x111122, 10, 50);
-    }
-
-    // --- وظائف المجسمات والفيزياء ---
     function addShape(type) {
         let geo = (type === 'cube') ? new THREE.BoxGeometry(2,2,2) : new THREE.SphereGeometry(1.5, 32, 32);
         let mat = new THREE.MeshStandardMaterial({ color: 0xdeff9a });
         let mesh = new THREE.Mesh(geo, mat);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
         mesh.position.y = 1;
+        mesh.castShadow = true;
         scene.add(mesh);
         objects.push(mesh);
         select(mesh);
     }
 
-    function setPhys(type) {
-        if(!selectedObj) return;
-        document.querySelectorAll('.phys-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('p-' + type).classList.add('active');
-        
-        // محاكاة بصرية لنوع المادة
-        if(type === 'rubber') {
-            selectedObj.material.roughness = 0.1;
-            selectedObj.material.metalness = 0.1;
-        } else if(type === 'cloth') {
-            selectedObj.material.wireframe = true; // تمثيل بصري للقماش
-        } else {
-            selectedObj.material.wireframe = false;
-            selectedObj.material.roughness = 0.5;
-        }
-    }
-
-    // --- النظام الأساسي ---
-    function onSelect(e) {
-        if(e.target.tagName !== 'CANVAS') return;
-        mouse.x = (e.clientX / (window.innerWidth - 530)) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const intersect = raycaster.intersectObjects(objects);
-        if(intersect.length > 0) select(intersect[0].object);
-    }
-
     function select(obj) {
         selectedObj = obj;
         transform.attach(obj);
-        document.getElementById('col-p').value = "#" + obj.material.color.getHexString();
+        document.getElementById('color-p').value = "#" + obj.material.color.getHexString();
     }
 
     function setMode(mode) {
         transform.setMode(mode);
-        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-' + mode[0]).classList.add('active');
+        document.querySelectorAll('.top-left .icon-btn').forEach(b => b.classList.remove('active'));
+        if(mode === 'translate') document.getElementById('btn-t').classList.add('active');
+        if(mode === 'rotate') document.getElementById('btn-r').classList.add('active');
+        if(mode === 'scale') document.getElementById('btn-s').classList.add('active');
+    }
+
+    function setPhys(type) {
+        if(!selectedObj) return;
+        document.querySelectorAll('.bottom-right .icon-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('p-' + type).classList.add('active');
+        
+        if(type === 'rubber') { selectedObj.material.roughness = 0.1; selectedObj.material.wireframe = false; }
+        else if(type === 'cloth') { selectedObj.material.wireframe = true; }
+        else { selectedObj.material.wireframe = false; selectedObj.material.roughness = 0.5; }
     }
 
     function updateColor(val) { if(selectedObj) selectedObj.material.color.set(val); }
+    
+    function deleteObj() { if(selectedObj) { scene.remove(selectedObj); transform.detach(); selectedObj = null; } }
 
     function animate() {
         requestAnimationFrame(animate);
@@ -220,14 +189,14 @@
         renderer.render(scene, camera);
         if(selectedObj) {
             const p = selectedObj.position;
-            document.querySelector('#pos-ui div').innerText = `X:${p.x.toFixed(1)} Y:${p.y.toFixed(1)} Z:${p.z.toFixed(1)}`;
+            document.getElementById('pos-info').innerText = `X:${p.x.toFixed(1)} Y:${p.y.toFixed(1)} Z:${p.z.toFixed(1)}`;
         }
     }
 
     window.addEventListener('resize', () => {
-        renderer.setSize(window.innerWidth - 530, window.innerHeight);
-        camera.aspect = (window.innerWidth - 530) / window.innerHeight;
+        camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
     });
 </script>
 </body>
