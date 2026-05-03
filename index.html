@@ -2,210 +2,120 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neo-Engine | المحرك الاحترافي</title>
-    
+    <title>Neo-Engine | بيئة التصنيع ثلاثية الأبعاد</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     
     <style>
-        :root {
-            --blender-bg: #393939; /* لون بيئة بلندر */
-            --sidebar-color: #282828;
-            --accent: #deff9a;
-            --header-color: #181818;
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #111; color: white; font-family: sans-serif; }
+        
+        /* شاشة الدخول */
+        #splash {
+            position: fixed; inset: 0; background: #0a0a0a; z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-
-        body, html { 
-            margin: 0; padding: 0; height: 100%; 
-            background: #111; color: white; 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            overflow: hidden;
-        }
-
-        /* شاشة الدخول (Project Setup) */
-        #project-gateway {
-            position: fixed; inset: 0; background: #0b0b0b;
-            display: flex; justify-content: center; align-items: center; z-index: 1000;
-        }
-        .gateway-card {
-            background: var(--sidebar-color); padding: 40px; border-radius: 20px;
-            border: 2px solid var(--accent); text-align: center;
-            box-shadow: 0 0 40px rgba(222, 255, 154, 0.1);
-        }
-        input { 
-            background: #1a1a1a; border: 1px solid #444; color: white;
-            padding: 15px; width: 280px; border-radius: 8px; margin: 20px 0;
-            text-align: center; font-size: 16px; outline: none;
-        }
-
-        /* واجهة المحرك (Main Layout) */
-        .engine-ui {
-            display: grid;
-            grid-template-columns: 240px 1fr 280px;
-            grid-template-rows: 50px 1fr 30px;
-            height: 100vh;
-            visibility: hidden; /* تظهر بعد إدخال الاسم */
-        }
-
-        header { 
-            grid-area: 1 / 1 / 2 / 4; background: var(--header-color); 
-            display: flex; align-items: center; padding: 0 20px; 
-            border-bottom: 1px solid #000; gap: 20px;
-        }
-
-        .viewport { 
-            grid-area: 2 / 2 / 3 / 3; background: var(--blender-bg); 
-            position: relative; cursor: crosshair;
-        }
-
-        .side-panel { background: var(--sidebar-color); padding: 15px; border: 1px solid #1a1a1a; }
-        .hierarchy { grid-area: 2 / 1 / 3 / 2; }
-        .inspector { grid-area: 2 / 3 / 3 / 4; }
-
-        footer { 
-            grid-area: 3 / 1 / 4 / 4; background: #1a1a1a; 
-            font-size: 11px; display: flex; align-items: center; 
-            padding: 0 15px; color: #666;
-        }
-
-        .btn { 
-            background: var(--accent); color: black; border: none; 
-            padding: 8px 18px; border-radius: 5px; cursor: pointer; 
-            font-weight: bold; font-size: 13px;
-        }
-
-        .hidden { display: none !important; }
+        .input-box { background: #222; padding: 30px; border-radius: 15px; border: 1px solid #deff9a; text-align: center; }
+        input { padding: 12px; width: 250px; border-radius: 5px; border: none; margin: 15px 0; font-size: 16px; }
+        
+        /* واجهة المحرك */
+        .layout { display: grid; grid-template-columns: 200px 1fr 250px; height: 100vh; visibility: hidden; }
+        .sidebar { background: #202020; padding: 15px; border: 1px solid #333; }
+        #canvas-container { background: #393939; position: relative; } /* لون خلفية بلندر */
+        
+        .btn { background: #deff9a; color: black; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="project-gateway">
-        <div class="gateway-card">
-            <h1 style="color: var(--accent); margin: 0; letter-spacing: 2px;">NEO-ENGINE</h1>
-            <p style="color: #888;">أدخل اسم مشروعك للبدء في التصنيع</p>
-            <input type="text" id="project-input" placeholder="مثلاً: عالمي الجديد">
-            <br>
-            <button class="btn" style="padding: 15px 40px; font-size: 16px;" onclick="runEngine()">تشغيل المحرك</button>
-        </div>
+<div id="splash">
+    <div class="input-box">
+        <h1 style="color: #deff9a;">NEO-ENGINE</h1>
+        <input type="text" id="pName" placeholder="اسم اللعبة...">
+        <br>
+        <button class="btn" onclick="start()">بدء التصنيع</button>
     </div>
+</div>
 
-    <div class="engine-ui" id="main-ui">
-        <header>
-            <div style="font-weight: bold; color: var(--accent); font-size: 22px;">NEO</div>
-            <div id="current-name" style="font-size: 14px; border-left: 1px solid #444; padding-left: 15px;"></div>
-            <div style="flex-grow: 1;"></div>
-            <button class="btn" onclick="saveData()">حفظ المشروع</button>
-            <button class="btn" style="background: #333; color: #fff; border: 1px solid #555;" onclick="alert('جاري تجهيز حزمة التصدير...')">تصدير (Build)</button>
-        </header>
+<div class="layout" id="editor">
+    <aside class="sidebar">
+        <h4 style="color: #deff9a;">Hierarchy</h4>
+        <p>📦 Cube</p>
+    </aside>
+    
+    <main id="canvas-container"></main>
+    
+    <aside class="sidebar">
+        <h4 style="color: #deff9a;">Inspector</h4>
+        <label>تحريك X:</label>
+        <input type="range" min="-5" max="5" step="0.1" value="0" oninput="updateCube(this.value)">
+    </aside>
+</div>
 
-        <aside class="side-panel hierarchy">
-            <h4 style="color: #888; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;">Hierarchy</h4>
-            <div id="obj-list" style="color: var(--accent); cursor: pointer;">📦 Cube (الأساسي)</div>
-        </aside>
+<script>
+    let scene, camera, renderer, cube, controls;
 
-        <main class="viewport" id="render-zone">
-            </main>
+    function start() {
+        document.getElementById('splash').style.display = 'none';
+        document.getElementById('editor').style.visibility = 'visible';
+        init3D();
+    }
 
-        <aside class="side-panel inspector">
-            <h4 style="color: #888; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;">Inspector</h4>
-            <div style="font-size: 13px;">
-                <label>موقع المحور X:</label><br>
-                <input type="number" id="posX" value="0" step="0.5" oninput="applyX()" style="width: 100%; background: #111; color: var(--accent); border: 1px solid #444; padding: 5px; margin-top: 5px;">
-                <br><br>
-                <button class="btn" style="background: #ff5555; color: white; width: 100%;" onclick="removeCube()">حذف المكعب</button>
-            </div>
-        </aside>
+    function init3D() {
+        const container = document.getElementById('canvas-container');
 
-        <footer>
-            <span>محرك Neo-Engine | جاهز للعمل</span>
-            <span style="margin-right: auto;">WebGL 2.0 Renderer</span>
-        </footer>
-    </div>
+        // 1. إنشاء المشهد (Scene)
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x393939); // خلفية رمادية مثل بلندر
 
-    <script>
-        let scene, camera, renderer, cube, controls;
+        // 2. الكاميرا (Camera)
+        camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(5, 5, 5);
 
-        function runEngine() {
-            const name = document.getElementById('project-input').value || "Project_New";
-            document.getElementById('current-name').innerText = "المشروع: " + name;
-            
-            document.getElementById('project-gateway').classList.add('hidden');
-            document.getElementById('main-ui').style.visibility = 'visible';
+        // 3. المحرك (Renderer)
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
 
-            setupScene();
-        }
+        // 4. الإضاءة (Lights) - ضرورية لظهور الأبعاد
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(10, 10, 10);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040, 2));
 
-        function setupScene() {
-            const viewport = document.getElementById('render-zone');
+        // 5. الأرضية الشبكية (Grid) - كما في بلندر
+        const grid = new THREE.GridHelper(20, 20, 0x888888, 0x444444);
+        scene.add(grid);
 
-            // 1. إنشاء المشهد
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x393939); // لون بلندر
+        // 6. المكعب ثلاثي الأبعاد (The Cube)
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshPhongMaterial({ color: 0xdeff9a });
+        cube = new THREE.Mesh(geometry, material);
+        cube.position.y = 0.5; // رفعه فوق الشبكة
+        scene.add(cube);
 
-            // 2. الكاميرا
-            camera = new THREE.PerspectiveCamera(75, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
-            camera.position.set(5, 5, 5);
+        // 7. تحريك الكاميرا (Orbit Controls)
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-            // 3. محرك الرسم (Renderer)
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(viewport.clientWidth, viewport.clientHeight);
-            viewport.appendChild(renderer.domElement);
+        animate();
+    }
 
-            // 4. نظام التحكم (Orbit Controls) - تدوير وزوم
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
 
-            // 5. إضافة الأرضية الشبكية (Grid) والمحاور (Axes)
-            const grid = new THREE.GridHelper(20, 20, 0x222222, 0x444444);
-            scene.add(grid);
-            const axes = new THREE.AxesHelper(3);
-            scene.add(axes);
+    function updateCube(val) {
+        if(cube) cube.position.x = parseFloat(val);
+    }
 
-            // 6. إضافة المكعب الافتراضي
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshPhongMaterial({ color: 0xdeff9a });
-            cube = new THREE.Mesh(geometry, material);
-            cube.position.y = 0.5; // فوق الشبكة مباشرة
-            scene.add(cube);
+    // جعل الشاشة تتكيف مع تغيير حجم المتصفح
+    window.addEventListener('resize', () => {
+        const container = document.getElementById('canvas-container');
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+</script>
 
-            // 7. الإضاءة
-            const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(10, 10, 10);
-            scene.add(light);
-            scene.add(new THREE.AmbientLight(0x404040, 2));
-
-            animate();
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
-
-        function applyX() {
-            if(cube) cube.position.x = parseFloat(document.getElementById('posX').value);
-        }
-
-        function removeCube() {
-            if(cube) {
-                scene.remove(cube);
-                cube = null;
-                document.getElementById('obj-list').innerHTML = "<span style='color:red;'>Scene Empty</span>";
-            }
-        }
-
-        function saveData() {
-            alert("تم حفظ بيانات المشروع في ذاكرة المحرك!");
-        }
-
-        // الحفاظ على الأبعاد عند تغيير حجم الشاشة
-        window.addEventListener('resize', () => {
-            const v = document.getElementById('render-zone');
-            camera.aspect = v.clientWidth / v.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(v.clientWidth, v.clientHeight);
-        });
-    </script>
 </body>
 </html>
