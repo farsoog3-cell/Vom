@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Neo-Engine | Pro Studio</title>
+    <title>Neo-Engine Pro | Multi-Tool Studio</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
@@ -16,9 +16,8 @@
             display: flex; flex-direction: column; gap: 8px;
         }
         
-        /* توزيع القوائم في الزوايا الأربعة */
-        .top-right { top: 20px; right: 20px; width: 180px; }
-        .top-left { top: 20px; left: 20px; width: 150px; }
+        .top-right { top: 20px; right: 20px; width: 160px; }
+        .top-left { top: 20px; left: 20px; width: 160px; }
         .bottom-right { bottom: 20px; right: 20px; width: 200px; }
         .bottom-left { bottom: 20px; left: 20px; }
 
@@ -47,28 +46,27 @@
     </div>
 
     <div class="panel top-right">
-        <div class="label">➕ إضافة</div>
-        <button class="btn" onclick="spawn('tree')">🌳 شجرة</button>
-        <button class="btn" onclick="spawn('grass')">🌱 أعشاب</button>
-        <button class="btn" onclick="spawn('cube')">📦 مكعب</button>
+        <div class="label">➕ إضافة مجسمات</div>
+        <button class="btn" onclick="spawn('tree')">🌳 إضافة شجرة</button>
+        <button class="btn" onclick="spawn('grass')">🌱 إضافة أعشاب</button>
+        <button class="btn" onclick="spawn('cube')">📦 إضافة مكعب</button>
     </div>
 
     <div class="panel top-left">
-        <div class="label">🔧 الأدوات</div>
-        <button class="btn active" id="m-t" onclick="setTMode('translate')">تحريك (G)</button>
-        <button class="btn" id="m-r" onclick="setTMode('rotate')">تدوير (R)</button>
-        <button class="btn" id="m-s" onclick="setTMode('scale')">تحجيم (S)</button>
+        <div class="label">🔧 أدوات التحكم</div>
+        <button class="btn active" id="m-t" onclick="setTMode('translate')">التحريك (G)</button>
+        <button class="btn" id="m-r" onclick="setTMode('rotate')">التدوير (R)</button>
+        <button class="btn" id="m-s" onclick="setTMode('scale')">التكبير/التصغير (S)</button>
     </div>
 
     <div class="panel bottom-right">
         <div class="label">🌍 أنواع الأرض</div>
-        <button class="btn" onclick="changeGround('green')">🟩 أرض خضراء</button>
-        <button class="btn" onclick="changeGround('sand')">🟨 أرض رملية</button>
+        <button class="btn" onclick="changeGround('green')">🟩 عشب</button>
+        <button class="btn" onclick="changeGround('sand')">🟨 رمال</button>
         <button class="btn" onclick="changeGround('mtn')">⛰️ تضاريس</button>
         
         <div class="label">🍃 الرياح والإضاءة</div>
         <input type="range" min="0" max="0.1" step="0.01" value="0.03" oninput="windStrength = parseFloat(this.value)">
-        <input type="range" min="0" max="2" step="0.1" value="1.2" oninput="sunLight.intensity = this.value">
     </div>
 
     <div class="panel bottom-left">
