@@ -1,4 +1,4 @@
-let scene, camera, renderer, orbit, transform, sunLight, ground;
+let scene, camera, renderer, orbit, transform, sunLight, ground, grid;
 let objects = [], windObjects = [];
 let windStrength = 0.03;
 
@@ -9,20 +9,29 @@ function init() {
     scene.background = new THREE.Color(0x0a0a0c);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(20, 15, 20);
+    camera.position.set(15, 12, 15); // زاوية كاميرا مثالية عند البدء
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     document.getElementById('viewport').appendChild(renderer.domElement);
 
+    // 1. شمس المشهد (الإضاءة)
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    sunLight.position.set(30, 50, 30);
+    sunLight.position.set(20, 40, 20);
     sunLight.castShadow = true;
     scene.add(sunLight);
 
-    changeGround('green'); // إنشاء الأرضية فوراً
+    // 2. الشبكة (Grid) تظهر عند البدء
+    grid = new THREE.GridHelper(100, 50, 0x444444, 0x222222);
+    scene.add(grid);
+
+    // 3. الأرضية
+    changeGround('green');
+
+    // 4. مكعب البداية في المنتصف
+    spawn('cube', true); 
 
     orbit = new THREE.OrbitControls(camera, renderer.domElement);
     orbit.enableDamping = true;
@@ -31,7 +40,7 @@ function init() {
     scene.add(transform);
     transform.addEventListener('dragging-changed', e => orbit.enabled = !e.value);
 
-    // نظام النقر لاختيار والتنقل بين المجسمات
+    // نظام الاختيار والتنقل
     window.addEventListener('mousedown', (e) => {
         if(e.target.tagName !== 'CANVAS') return;
         const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
@@ -51,14 +60,14 @@ function init() {
 function changeGround(type) {
     if(ground) scene.remove(ground);
     const geo = new THREE.PlaneGeometry(100, 100, 32, 32);
-    let color = 0x1d2b1d;
+    let color = 0x1a241a;
     if(type === 'sand') color = 0xc2b280;
     if(type === 'mtn') color = 0x333333;
     
     const mat = new THREE.MeshStandardMaterial({ color: color, side: THREE.DoubleSide });
     if(type === 'mtn') {
         const pos = geo.attributes.position;
-        for(let i=0; i<pos.count; i++) pos.setZ(i, Math.random() * 2);
+        for(let i=0; i<pos.count; i++) pos.setZ(i, Math.random() * 1.5);
     }
     ground = new THREE.Mesh(geo, mat);
     ground.rotation.x = -Math.PI / 2;
@@ -66,7 +75,7 @@ function changeGround(type) {
     scene.add(ground);
 }
 
-function spawn(type) {
+function spawn(type, isInitial = false) {
     let obj;
     if(type === 'tree') {
         obj = new THREE.Group();
@@ -81,17 +90,23 @@ function spawn(type) {
     } else {
         obj = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color: 0xdeff9a}));
     }
-    obj.position.set(Math.random()*10-5, 0, Math.random()*10-5);
-    obj.traverse(c => { if(c.isMesh) c.castShadow = true; });
+    
+    // إذا كان مكعب البداية يوضع في الصفر، وإلا يوضع عشوائياً
+    if(isInitial) obj.position.set(0, 1, 0);
+    else obj.position.set(Math.random()*10-5, 1, Math.random()*10-5);
+    
+    obj.traverse(c => { if(c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
     scene.add(obj);
     objects.push(obj);
     transform.attach(obj);
 }
 
 function setTMode(m) {
-    transform.setMode(m);
+    transform.setMode(m); // يحول بين التحريك، التدوير، والتكبير
     document.querySelectorAll('.top-left .btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('m-'+m[0]).classList.add('active');
+    if(m === 'translate') document.getElementById('m-t').classList.add('active');
+    if(m === 'rotate') document.getElementById('m-r').classList.add('active');
+    if(m === 'scale') document.getElementById('m-s').classList.add('active');
 }
 
 function deleteObj() {
@@ -106,7 +121,8 @@ function deleteObj() {
 
 function setView(isView) {
     document.querySelectorAll('.panel').forEach(p => p.style.display = isView ? 'none' : 'flex');
-    if(isView) transform.detach();
+    if(isView) { transform.detach(); grid.visible = false; }
+    else { grid.visible = true; }
 }
 
 function animate() {
