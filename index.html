@@ -2,93 +2,93 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Neo-Engine | Nature Builder</title>
+    <title>Neo-Engine | Game Maker Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
     <style>
-        :root { --primary: #deff9a; --glass: rgba(10, 10, 10, 0.9); --border: rgba(222, 255, 154, 0.2); }
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; color: white; font-family: sans-serif; }
+        :root { --primary: #deff9a; --glass: rgba(15, 15, 15, 0.95); --accent: #3498db; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; color: white; font-family: 'Segoe UI', sans-serif; }
         
-        .corner-panel {
-            position: absolute; background: var(--glass); padding: 12px; border-radius: 12px;
-            border: 1px solid var(--border); backdrop-filter: blur(10px); z-index: 100;
-            display: flex; flex-direction: column; gap: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-        }
+        /* القوائم العائمة */
+        .panel { position: absolute; background: var(--glass); padding: 12px; border-radius: 10px; border: 1px solid #333; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
+        .top-left { top: 10px; left: 10px; width: 220px; }
+        .top-right { top: 10px; right: 10px; width: 240px; }
+        .bottom-right { bottom: 10px; right: 10px; width: 240px; }
+        .top-center { top: 10px; left: 50%; transform: translateX(-50%); flex-direction: row; }
+
+        .btn { background: #222; border: 1px solid #444; color: white; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 12px; transition: 0.2s; text-align: center; }
+        .btn:hover { background: var(--primary); color: #000; }
+        .btn.active { background: var(--accent); color: white; border-color: #fff; }
+        .play-btn { background: #27ae60; color: white; font-weight: bold; width: 120px; }
         
-        .top-left { top: 20px; left: 20px; } 
-        .top-right { top: 20px; right: 20px; }
-        .bottom-left { bottom: 20px; left: 20px; width: 200px; }
-        .bottom-right { bottom: 20px; right: 20px; }
-
-        .btn {
-            background: #1a1a1a; border: 1px solid #333; color: white; padding: 8px 12px;
-            border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 13px; text-align: right;
-        }
-        .btn:hover { background: var(--primary); color: black; }
-        .btn.active { background: var(--primary); color: black; font-weight: bold; }
-
-        select.btn { width: 100%; background: #222; }
-        input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
-        .label { font-size: 10px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+        .label { font-size: 10px; color: var(--primary); font-weight: bold; text-transform: uppercase; margin-top: 5px; }
+        input[type="range"] { width: 100%; accent-color: var(--primary); }
+        select { background: #111; color: white; border: 1px solid #444; padding: 5px; border-radius: 4px; }
         
         #viewport { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
 
-    <div class="corner-panel top-left">
-        <span class="label">التحكم</span>
-        <button class="btn active" id="mode-t" onclick="setMode('translate')">تحريك (G)</button>
-        <button class="btn" id="mode-r" onclick="setMode('rotate')">تدوير (R)</button>
-        <button class="btn" id="mode-s" onclick="setMode('scale')">تحجيم (S)</button>
+    <div class="panel top-center">
+        <button class="btn play-btn" id="playBtn" onclick="togglePlay()">▶ تشغيل اللعبة</button>
+        <button class="btn" onclick="resetEditor()">⏹ إنهاء</button>
     </div>
 
-    <div class="corner-panel top-right">
-        <span class="label">إضافة شجر</span>
-        <select id="tree-type" class="btn" onchange="spawnAtCenter('tree', this.value)">
-            <option value="">+ اختر شجرة</option>
-            <option value="oak">🌳 شجر بلوط</option>
-            <option value="pine">🌲 صنوبر</option>
-            <option value="palm">🌴 نخلة</option>
-        </select>
-        
-        <span class="label">إضافة أرض</span>
-        <select id="ground-type" class="btn" onchange="setGround(this.value)">
-            <option value="flat">🟩 أرض مسطحة</option>
-            <option value="sand">🏜️ صحراء رملية</option>
-            <option value="mountains">⛰️ جبال وعرة</option>
+    <div class="panel top-left">
+        <span class="label">إضافة عناصر العالم</span>
+        <select onchange="addItem(this.value); this.value='';">
+            <option value="">+ إضافة مجسم/إضاءة</option>
+            <option value="cube">📦 مكعب صلب</option>
+            <option value="sphere">🔮 كرة</option>
+            <option value="sun">☀️ شمس (ضوء اتجاهي)</option>
+            <option value="point">💡 ضوء نقطي (مصباح)</option>
+            <option value="game_cam">🎥 كاميرا تصوير اللعبة</option>
         </select>
 
-        <button class="btn" onclick="spawnAtCenter('grass')">🌱 إضافة أعشاب</button>
+        <span class="label">الطبيعة</span>
+        <button class="btn" onclick="addNature('tree_oak')">🌳 شجرة بلوط</button>
+        <button class="btn" onclick="addNature('tree_palm')">🌴 نخلة</button>
+        <button class="btn" onclick="addNature('grass')">🌱 أعشاب</button>
+        <button class="btn" onclick="addWater()">💧 إضافة بحيرة مائية</button>
+
+        <span class="label">نوع الأرض</span>
+        <button class="btn" onclick="changeGround('flat')">🟩 مسطحة</button>
+        <button class="btn" onclick="changeGround('sand')">🏜️ رملية</button>
     </div>
 
-    <div class="corner-panel bottom-left">
-        <span class="label">قوة الشمس والظل</span>
-        <input type="range" id="sun-val" min="0" max="2" step="0.1" value="1" oninput="updateSun()">
+    <div class="panel top-right">
+        <span class="label">أدوات النحت (Sculpt)</span>
+        <button class="btn" id="sculpt_up" onclick="setTool('sculpt_up')">🔼 رفع الأرض (تلال)</button>
+        <button class="btn" id="sculpt_down" onclick="setTool('sculpt_down')">🔽 حفر الأرض (وديان)</button>
         
-        <span class="label">قوة الرياح (Wind)</span>
-        <input type="range" id="wind-val" min="0" max="0.1" step="0.01" value="0.02" oninput="updateWind()">
+        <span class="label">فرشاة التلوين</span>
+        <input type="color" id="paintColor" value="#deff9a" style="width:100%">
+        <button class="btn" id="paint_tool" onclick="setTool('paint')">🖌️ تلوين المجسمات</button>
         
-        <hr style="border:0; border-top:1px solid #333">
-        <div id="obj-info" style="font-size:11px; color:#888;">لا يوجد عنصر مختار</div>
+        <span class="label">حجم الفرشاة</span>
+        <input type="range" id="brushSize" min="1" max="10" value="3">
     </div>
 
-    <div class="corner-panel bottom-right">
-        <span class="label">نوع المجسم</span>
-        <button class="btn" onclick="spawnAtCenter('cube')">📦 مكعب</button>
-        <button class="btn" onclick="spawnAtCenter('sphere')">🔮 كرة</button>
+    <div class="panel bottom-right">
+        <span class="label">محاكي البيئة</span>
+        <label style="font-size:10px">قوة الرياح:</label>
+        <input type="range" id="windRange" min="0" max="100" value="20">
+        <label style="font-size:10px">سطوع الشمس:</label>
+        <input type="range" id="sunRange" min="0" max="200" value="100">
         <hr style="border:0; border-top:1px solid #333">
-        <button class="btn" onclick="deleteSelected()" style="color:#ff4444;">حذف المختار</button>
+        <div id="status" style="font-size:11px; color:#888">جاهز...</div>
+        <button class="btn" onclick="deleteObj()" style="background:#631313; margin-top:5px">حذف المختار</button>
     </div>
 
     <div id="viewport"></div>
 
 <script>
-    let scene, camera, renderer, orbit, transform, raycaster, mouse;
-    let ground, sunLight;
-    let objects = [], windObjects = [];
-    let selectedObj = null, windStrength = 0.02;
+    let scene, camera, editorCam, gameCam, renderer, orbit, transform, raycaster, mouse;
+    let ground, groundGeo, sunLight;
+    let objects = [], windObjs = [], isPlaying = false;
+    let activeTool = null;
 
     init();
 
@@ -96,160 +96,161 @@
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050505);
         
-        camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-        camera.position.set(15, 15, 15);
+        editorCam = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+        editorCam.position.set(20, 20, 20);
+        camera = editorCam;
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
         document.getElementById('viewport').appendChild(renderer.domElement);
 
-        // الأساسيات: شبكة وضوء هادئ
-        const grid = new THREE.GridHelper(40, 40, 0x222222, 0x111111);
-        scene.add(grid);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-        // الشمس
+        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
         sunLight = new THREE.DirectionalLight(0xffffff, 1);
-        sunLight.position.set(20, 40, 20);
+        sunLight.position.set(50, 50, 50);
         sunLight.castShadow = true;
         scene.add(sunLight);
 
-        orbit = new THREE.OrbitControls(camera, renderer.domElement);
-        orbit.enableDamping = true;
-
-        transform = new THREE.TransformControls(camera, renderer.domElement);
+        orbit = new THREE.OrbitControls(editorCam, renderer.domElement);
+        transform = new THREE.TransformControls(editorCam, renderer.domElement);
         scene.add(transform);
         transform.addEventListener('dragging-changed', e => orbit.enabled = !e.value);
 
         raycaster = new THREE.Raycaster();
         mouse = new THREE.Vector2();
-        window.addEventListener('mousedown', onSelect);
 
-        // أرضية افتراضية
-        setGround('flat');
-
-        animate();
-    }
-
-    function setGround(type) {
-        if(ground) scene.remove(ground);
-        let geo = new THREE.PlaneGeometry(60, 60, 32, 32);
-        let mat = new THREE.MeshStandardMaterial({color: 0x224422});
-
-        if(type === 'sand') mat.color.set(0xd2b48c);
-        if(type === 'mountains') {
-            const pos = geo.attributes.position;
-            for(let i=0; i<pos.count; i++) {
-                let x = pos.getX(i), y = pos.getY(i);
-                pos.setZ(i, Math.sin(x*0.2) * Math.cos(y*0.2) * 4);
-            }
-        }
-        
-        ground = new THREE.Mesh(geo, mat);
+        // إنشاء الأرضية للنحت (Grid High Res)
+        groundGeo = new THREE.PlaneGeometry(100, 100, 100, 100);
+        ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({color: 0x224422, wireframe: false}));
         ground.rotation.x = -Math.PI/2;
         ground.receiveShadow = true;
         scene.add(ground);
-        
-        if(type !== 'flat') scene.background = new THREE.Color(0x87ceeb);
+
+        window.addEventListener('mousedown', onMouseDown);
+        animate();
     }
 
-    function spawnAtCenter(type, subType) {
-        let obj;
-        if(type === 'tree') {
-            obj = createTree(subType);
-            windObjects.push(obj);
-        } else if(type === 'grass') {
-            obj = new THREE.Mesh(new THREE.ConeGeometry(0.1, 1, 4), new THREE.MeshStandardMaterial({color: 0x00ff00}));
-            windObjects.push(obj);
-        } else if(type === 'cube') {
-            obj = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color: 0xdeff9a}));
-        } else {
-            obj = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), new THREE.MeshStandardMaterial({color: 0xdeff9a}));
-        }
-        
-        obj.position.set(Math.random()*4-2, 1, Math.random()*4-2);
-        obj.castShadow = true;
-        scene.add(obj);
-        objects.push(obj);
-        select(obj);
+    function setTool(tool) {
+        activeTool = (activeTool === tool) ? null : tool;
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        if(activeTool) document.getElementById(tool).classList.add('active');
     }
 
-    function createTree(subType) {
-        const group = new THREE.Group();
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 3), new THREE.MeshStandardMaterial({color: 0x4d2600}));
-        trunk.position.y = 1.5;
-        
-        let leafGeo = new THREE.SphereGeometry(1.5, 8, 8);
-        let leafCol = 0x116611;
-        
-        if(subType === 'pine') { leafGeo = new THREE.ConeGeometry(1.5, 4, 8); leafCol = 0x0a330a; }
-        if(subType === 'palm') { leafGeo = new THREE.TorusGeometry(1, 0.2, 8, 20); leafCol = 0x228b22; }
-
-        const leaves = new THREE.Mesh(leafGeo, new THREE.MeshStandardMaterial({color: leafCol}));
-        leaves.position.y = subType === 'pine' ? 3.5 : 3;
-        
-        group.add(trunk, leaves);
-        return group;
-    }
-
-    function onSelect(e) {
-        if(e.target.tagName !== 'CANVAS') return;
+    function onMouseDown(e) {
+        if(e.target.tagName !== 'CANVAS' || isPlaying) return;
         mouse.x = (e.clientX/window.innerWidth)*2-1;
         mouse.y = -(e.clientY/window.innerHeight)*2+1;
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(objects, true);
-        if(intersects.length > 0) {
-            let t = intersects[0].object;
-            while(t.parent && t.parent !== scene) t = t.parent;
-            select(t);
+
+        const groundIntersect = raycaster.intersectObject(ground);
+        const objIntersects = raycaster.intersectObjects(objects, true);
+
+        // أدوات النحت
+        if((activeTool === 'sculpt_up' || activeTool === 'sculpt_down') && groundIntersect.length > 0) {
+            sculptGround(groundIntersect[0].point, activeTool);
+            return;
+        }
+
+        // أداة التلوين
+        if(activeTool === 'paint' && objIntersects.length > 0) {
+            let target = objIntersects[0].object;
+            target.material.color.set(document.getElementById('paintColor').value);
+            return;
+        }
+
+        // اختيار وتحريك
+        if(objIntersects.length > 0) {
+            let target = objIntersects[0].object;
+            while(target.parent && target.parent !== scene) target = target.parent;
+            transform.attach(target);
+            document.getElementById('status').innerText = "مختار: " + target.name;
+        } else {
+            transform.detach();
         }
     }
 
-    function select(obj) {
-        selectedObj = obj;
-        transform.attach(obj);
-        document.getElementById('obj-info').innerText = "عنصر مختار: " + obj.type;
+    function sculptGround(point, tool) {
+        const pos = groundGeo.attributes.position;
+        const radius = document.getElementById('brushSize').value;
+        const strength = tool === 'sculpt_up' ? 0.5 : -0.5;
+
+        for(let i=0; i<pos.count; i++) {
+            let vx = pos.getX(i), vy = pos.getY(i);
+            // تحويل إحداثيات الأرض لمتجهات العالم
+            let dist = Math.sqrt(Math.pow(vx - point.x, 2) + Math.pow(-vy - point.z, 2));
+            if(dist < radius) {
+                pos.setZ(i, pos.getZ(i) + (strength * (1 - dist/radius)));
+            }
+        }
+        pos.needsUpdate = true;
     }
 
-    function setMode(mode) {
-        transform.setMode(mode);
-        document.querySelectorAll('.top-left .btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('mode-'+mode[0]).classList.add('active');
+    function addItem(type) {
+        let obj;
+        if(type === 'cube') obj = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color: 0x888888}));
+        if(type === 'game_cam') {
+            obj = new THREE.Group();
+            let body = new THREE.Mesh(new THREE.BoxGeometry(1,1,2), new THREE.MeshBasicMaterial({color: 0xff0000}));
+            obj.add(body);
+            gameCam = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+            obj.add(gameCam);
+            obj.name = "GameCamera";
+        }
+        if(obj) {
+            obj.position.set(0, 2, 0);
+            scene.add(obj);
+            objects.push(obj);
+            transform.attach(obj);
+        }
     }
 
-    function updateSun() { sunLight.intensity = document.getElementById('sun-val').value; }
-    function updateWind() { windStrength = parseFloat(document.getElementById('wind-val').value); }
+    function addNature(type) {
+        let group = new THREE.Group();
+        if(type.includes('tree')) {
+            let trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.4, 3), new THREE.MeshStandardMaterial({color: 0x4d2600}));
+            let leaves = new THREE.Mesh(new THREE.SphereGeometry(1.5, 8, 8), new THREE.MeshStandardMaterial({color: 0x116611}));
+            leaves.position.y = 3;
+            group.add(trunk, leaves);
+            windObjs.push(group);
+        }
+        group.position.set(Math.random()*10-5, 0, Math.random()*10-5);
+        scene.add(group);
+        objects.push(group);
+    }
 
-    function deleteSelected() {
-        if(selectedObj) {
-            scene.remove(selectedObj);
-            objects = objects.filter(o => o !== selectedObj);
-            windObjects = windObjects.filter(o => o !== selectedObj);
+    function addWater() {
+        let water = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshStandardMaterial({color: 0x00aaff, transparent: true, opacity: 0.7}));
+        water.rotation.x = -Math.PI/2;
+        water.position.y = 0.5;
+        scene.add(water);
+        objects.push(water);
+    }
+
+    function togglePlay() {
+        if(!gameCam) { alert("من فضلك أضف كاميرا اللعبة أولاً!"); return; }
+        isPlaying = !isPlaying;
+        if(isPlaying) {
+            camera = gameCam;
             transform.detach();
-            selectedObj = null;
+            document.getElementById('playBtn').innerText = "⏸ إيقاف";
+        } else {
+            camera = editorCam;
+            document.getElementById('playBtn').innerText = "▶ تشغيل اللعبة";
         }
     }
 
     function animate() {
         requestAnimationFrame(animate);
         let time = Date.now() * 0.002;
+        let wind = document.getElementById('windRange').value / 1000;
         
-        // تحريك الرياح
-        windObjects.forEach(obj => {
-            obj.rotation.x = Math.sin(time) * windStrength;
-            obj.rotation.z = Math.cos(time) * windStrength;
+        windObjs.forEach(o => {
+            o.rotation.x = Math.sin(time) * wind;
+            o.rotation.z = Math.cos(time) * wind;
         });
 
-        orbit.update();
         renderer.render(scene, camera);
     }
-
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth/window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
 </script>
 </body>
 </html>
