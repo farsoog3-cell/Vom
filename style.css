@@ -1,0 +1,65 @@
+:root {
+    --primary: #deff9a;
+    --bg: rgba(10, 10, 12, 0.9);
+    --border: rgba(222, 255, 154, 0.2);
+}
+
+body {
+    margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #000; color: white;
+}
+
+/* لوحة التحكم الجانبية */
+.sidebar {
+    position: absolute; right: 15px; top: 70px; width: 260px;
+    max-height: 80vh; overflow-y: auto; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 15px; z-index: 100; backdrop-filter: blur(10px);
+}
+
+.sidebar-title { font-size: 16px; color: var(--primary); margin-bottom: 15px; text-align: center; }
+
+/* القوائم المنسدلة */
+.category { margin-bottom: 10px; }
+
+.category-toggle {
+    width: 100%; padding: 10px; background: #1a1a1a;
+    border: 1px solid #333; color: #fff; text-align: right;
+    cursor: pointer; border-radius: 6px; transition: 0.3s;
+}
+
+.category-toggle:hover { border-color: var(--primary); }
+
+.category-content {
+    display: none; flex-direction: column; gap: 5px;
+    padding: 10px; background: rgba(255,255,255,0.03);
+}
+
+.category-content.active { display: flex; }
+
+.category-content button {
+    background: transparent; border: 1px solid #444; color: #ccc;
+    padding: 7px; border-radius: 4px; cursor: pointer; font-size: 13px;
+}
+
+.category-content button:hover { background: var(--primary); color: #000; }
+
+/* وضع الرؤية */
+.mode-selector {
+    position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 10px; z-index: 200;
+}
+
+.mode-btn {
+    padding: 8px 20px; border-radius: 20px; border: 1px solid var(--primary);
+    background: transparent; color: var(--primary); cursor: pointer;
+}
+
+.mode-btn.active { background: var(--primary); color: #000; }
+
+.delete-btn {
+    width: 100%; margin-top: 20px; padding: 10px; background: #441111;
+    color: #ff5555; border: 1px solid #ff5555; border-radius: 6px; cursor: pointer;
+}
+
+#viewport { width: 100vw; height: 100vh; }

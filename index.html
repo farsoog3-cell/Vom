@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo-Engine Pro | World Builder</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+</head>
+<body>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" id="btn-edit" onclick="toggleViewMode(false)">وضع البناء</button>
+        <button class="mode-btn" id="btn-view" onclick="toggleViewMode(true)">وضع الرؤية</button>
+    </div>
+
+    <div id="editor-ui" class="sidebar">
+        <h2 class="sidebar-title">المحرك الطبيعي</h2>
+
+        <div class="category">
+            <button class="category-toggle" onclick="toggleCat('cat-trees')">🌳 الأشجار</button>
+            <div id="cat-trees" class="category-content">
+                <button onclick="spawn('tree', 'oak')">بلوط عريض</button>
+                <button onclick="spawn('tree', 'pine')">صنوبر كثيف</button>
+                <button onclick="spawn('tree', 'palm')">نخلة طويلة</button>
+            </div>
+        </div>
+
+        <div class="category">
+            <button class="category-toggle" onclick="toggleCat('cat-light')">☀️ الشمس والإضاءة</button>
+            <div id="cat-light" class="category-content">
+                <label>شدة الشمس</label>
+                <input type="range" min="0" max="2" step="0.1" oninput="updateLight(this.value)">
+                <button onclick="selectSun()">تحريك الشمس يدوياً</button>
+                <button onclick="setEnv('sunset')">غروب</button>
+            </div>
+        </div>
+
+        <div class="category">
+            <button class="category-toggle" onclick="toggleCat('cat-grass')">🌱 الحشائش</button>
+            <div id="cat-grass" class="category-content">
+                <button onclick="spawn('grass', 'field')">حقل معشب</button>
+                <button onclick="spawn('grass', 'wild')">أعشاب برية</button>
+            </div>
+        </div>
+
+        <div class="category">
+            <button class="category-toggle" onclick="toggleCat('cat-water')">🌊 البحار والمياه</button>
+            <div id="cat-water" class="category-content">
+                <button onclick="setWater('clear')">مياه صافية</button>
+                <button onclick="setWater('deep')">محيط عميق</button>
+            </div>
+        </div>
+
+        <div class="category">
+            <button class="category-toggle" onclick="toggleCat('cat-mtn')">⛰️ الجبال والتضاريس</button>
+            <div id="cat-mtn" class="category-content">
+                <button onclick="updateTerrain('sharp')">جبال حادة</button>
+                <button onclick="updateTerrain('smooth')">تلال ناعمة</button>
+            </div>
+        </div>
+
+        <div class="category">
+            <button class="category-toggle" onclick="toggleCat('cat-clouds')">☁️ الغيوم</button>
+            <div id="cat-clouds" class="category-content">
+                <button onclick="addClouds('heavy')">غيوم ركامية</button>
+                <button onclick="addClouds('thin')">سحب رقيقة</button>
+            </div>
+        </div>
+
+        <div class="category">
+            <button class="category-toggle" onclick="toggleCat('cat-tools')">🖌️ الفرشاة والنحت</button>
+            <div id="cat-tools" class="category-content">
+                <button onclick="setTool('sculpt')">نحت (رفع الأرض)</button>
+                <button onclick="setTool('paint')">تلوين التضاريس</button>
+            </div>
+        </div>
+
+        <button class="delete-btn" onclick="deleteObj()">حذف العنصر المختار</button>
+    </div>
+
+    <div id="viewport"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
