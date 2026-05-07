@@ -2,41 +2,64 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Neo-Engine | Modular Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo-Blender JS | Studio Pro</title>
+    
     <link rel="stylesheet" href="style.css">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
 </head>
 <body>
 
-    <div class="toolbar">
+    <header class="toolbar">
         <div class="logo">NEO-ENGINE</div>
-        <button class="btn" onclick="openLibrary('shapes')">📦 الأشكال</button>
-        <button class="btn" onclick="openLibrary('nature')">🌳 الطبيعة</button>
-        <button class="btn" onclick="openLibrary('assets')">🏯 موديلات خاصة</button>
+        
+        <nav class="nav-group">
+            <button class="btn" onclick="openLibrary('shapes')">📦 الأشكال الأساسية</button>
+            <button class="btn" onclick="openLibrary('nature')">🌳 بيئة وطبيعة</button>
+            <button class="btn" onclick="openLibrary('assets')">🏯 موديلات متقدمة</button>
+        </nav>
+
         <div style="flex-grow: 1;"></div>
-        <button class="btn delete-btn" onclick="deleteSelected()">🗑️ حذف</button>
-    </div>
+
+        <div class="view-controls">
+            <button class="btn active" id="edit-mode-btn" onclick="setWorkMode('Object')">Object Mode</button>
+            <button class="btn delete-btn" onclick="deleteSelected()">🗑️ حذف المختار</button>
+        </div>
+    </header>
+
+    <aside class="gizmo-tools">
+        <div class="tool-label">أدوات التشكيل</div>
+        <button class="btn active" id="m-t" onclick="setGizmoMode('translate')" title="تحريك (G)">
+            <span>G</span> تحريك
+        </button>
+        <button class="btn" id="m-r" onclick="setGizmoMode('rotate')" title="تدوير (R)">
+            <span>R</span> تدوير
+        </button>
+        <button class="btn" id="m-s" onclick="setGizmoMode('scale')" title="تحجيم/مط (S)">
+            <span>S</span> شد ومط
+        </button>
+
+        <hr style="border: 0; border-top: 1px solid #333; margin: 10px 0;">
+
+        <div class="tool-label">أوضاع متقدمة</div>
+        <button class="btn mode-btn" onclick="setWorkMode('Edit Mode')">🛠️ وضع التحرير</button>
+        <button class="btn mode-btn" onclick="setWorkMode('Sculpt Mode')">🎨 وضع النحت</button>
+        <button class="btn mode-btn" onclick="setWorkMode('Camera View')">📷 رؤية الكاميرا</button>
+    </aside>
 
     <div id="library-modal" class="modal">
         <div class="modal-header">
-            <span id="modal-title">المكتبة</span>
-            <span class="close" onclick="closeLibrary()">×</span>
+            <span id="modal-title">مكتبة العناصر</span>
+            <span class="close-btn" onclick="closeLibrary()">×</span>
         </div>
         <div id="library-content" class="modal-body">
             </div>
     </div>
 
-    <div class="gizmo-tools">
-        <button class="btn active" id="m-t" onclick="setGizmoMode('translate')">تحريك</button>
-        <button class="btn" id="m-r" onclick="setGizmoMode('rotate')">تدوير</button>
-        <button class="btn" id="m-s" onclick="setGizmoMode('scale')">تحجيم</button>
-    </div>
-
     <div id="viewport"></div>
 
-    <script src="library.js"></script>
-    <script src="engine.js"></script>
-</body>
+    <script src="library.js"></script> <script src="engine.js"></script>  </body>
 </html>
