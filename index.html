@@ -2,118 +2,156 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Neo-Engine Pro Studio</title>
+    <title>Neo-Engine Pro | Professional Editor</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
     <style>
-        :root { --primary: #deff9a; --glass: rgba(15, 15, 15, 0.95); --border: rgba(222, 255, 154, 0.2); }
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; color: white; font-family: sans-serif; }
-        
-        /* توزيع القوائم في الزوايا الأربعة */
-        .panel {
-            position: absolute; background: var(--glass); padding: 12px; border-radius: 12px;
-            border: 1px solid var(--border); backdrop-filter: blur(10px); z-index: 100;
-            display: flex; flex-direction: column; gap: 8px;
+        :root { 
+            --bg-dark: #111111; 
+            --bg-panel: #1a1a1a;
+            --primary: #deff9a; 
+            --text: #eeeeee;
+            --border: #333333;
         }
-        
-        .top-right { top: 20px; right: 20px; width: 170px; }
-        .top-left { top: 20px; left: 20px; width: 170px; }
-        .bottom-right { bottom: 20px; right: 20px; width: 210px; }
-        .bottom-left { bottom: 20px; left: 20px; }
 
-        .label { font-size: 11px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 4px; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: var(--bg-dark); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
+        /* الهيكل الرئيسي مثل الفوتوشوب */
+        .editor-container { display: flex; height: 100vh; width: 100vw; }
+
+        /* الشريط الجانبي الأيسر (الأدوات) */
+        .sidebar-left { width: 220px; background: var(--bg-panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
+
+        /* الشريط الجانبي الأيمن (العناصر والخصائص) */
+        .sidebar-right { width: 250px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
+
+        /* منطقة العمل المركزية */
+        .main-viewport { flex-grow: 1; position: relative; overflow: hidden; cursor: crosshair; }
+
+        /* اللوحات الداخلية */
+        .panel { padding: 15px; border-bottom: 1px solid var(--border); }
+        .panel-header { font-size: 12px; font-weight: bold; color: var(--primary); text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; }
+
+        /* الأزرار */
         .btn {
-            background: #1a1a1a; border: 1px solid #333; color: white; padding: 10px;
-            border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 12px; text-align: right;
+            background: #252525; border: 1px solid var(--border); color: var(--text); padding: 8px;
+            border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 12px; text-align: right; margin-bottom: 5px; width: 100%;
         }
-        .btn:hover { background: var(--primary); color: black; }
-        .btn.active { background: var(--primary); color: black; font-weight: bold; }
+        .btn:hover { background: #333; border-color: var(--primary); }
+        .btn.active { background: var(--primary); color: #000; font-weight: bold; }
 
-        .mode-selector {
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            display: flex; background: var(--glass); padding: 5px; border-radius: 30px; border: 1px solid var(--border); z-index: 200;
-        }
+        /* قائمة العناصر (Scene Tree) */
+        #scene-tree { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
+        #scene-tree li { padding: 6px; font-size: 11px; cursor: pointer; border-bottom: 1px solid #222; }
+        #scene-tree li:hover { background: #333; }
+        #scene-tree li.selected { background: var(--primary); color: #000; }
 
-        #viewport { position: absolute; inset: 0; z-index: 1; }
+        /* شريط التحكم العلوي */
+        .top-bar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 100; background: var(--bg-panel); padding: 5px 20px; border-radius: 30px; border: 1px solid var(--border); display: flex; gap: 10px; }
+
+        /* المدخلات */
+        input[type="range"] { width: 100%; accent-color: var(--primary); }
+        .prop-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11px; }
+        input[type="text"] { background: #000; border: 1px solid #444; color: #fff; padding: 4px; width: 80px; }
     </style>
 </head>
 <body>
 
-    <div class="mode-selector">
-        <button class="btn active" id="btn-edit" style="border-radius:20px; width:85px;" onclick="setView(false)">تعديل</button>
-        <button class="btn" id="btn-view" style="border-radius:20px; width:85px;" onclick="setView(true)">رؤية</button>
-    </div>
+<div class="editor-container">
+    
+    <aside class="sidebar-left">
+        <div class="panel">
+            <div class="panel-header">🔧 أدوات التحكم</div>
+            <button class="btn active" id="m-t" onclick="setTMode('translate')">التحريك (G)</button>
+            <button class="btn" id="m-r" onclick="setTMode('rotate')">التدوير (R)</button>
+            <button class="btn" id="m-s" onclick="setTMode('scale')">الحجم (S)</button>
+        </div>
+        <div class="panel" style="flex-grow:1; overflow-y:auto;">
+            <div class="panel-header">➕ إضافة عناصر</div>
+            <div style="font-size: 10px; color: #777; margin-bottom: 5px;">الأشجار</div>
+            <button class="btn" onclick="spawn('tree')">🌳 شجرة بلوط</button>
+            <div style="font-size: 10px; color: #777; margin-bottom: 5px;">الطبيعة</div>
+            <button class="btn" onclick="spawn('grass')">🌱 أعشاب برية</button>
+            <div style="font-size: 10px; color: #777; margin-bottom: 5px;">أشكال هندسية</div>
+            <button class="btn" onclick="spawn('cube')">📦 مكعب بناء</button>
+        </div>
+        <div class="panel">
+            <button class="btn" style="color: #ff5e5e;" onclick="deleteObj()">🗑️ حذف المختار</button>
+        </div>
+    </aside>
 
-    <div class="panel top-right">
-        <div class="label">➕ إضافة مجسمات</div>
-        <button class="btn" onclick="spawn('tree')">🌳 إضافة شجرة</button>
-        <button class="btn" onclick="spawn('grass')">🌱 إضافة أعشاب</button>
-        <button class="btn" onclick="spawn('cube')">📦 إضافة مكعب</button>
-    </div>
+    <main class="main-viewport" id="viewport">
+        <div class="top-bar">
+            <button class="btn active" id="btn-edit" onclick="setView(false)" style="width: 70px;">تحرير</button>
+            <button class="btn" id="btn-view" onclick="setView(true)" style="width: 70px;">معاينة</button>
+        </div>
+    </main>
 
-    <div class="panel top-left">
-        <div class="label">🔧 أدوات التحكم</div>
-        <button class="btn active" id="m-t" onclick="setTMode('translate')">التحريك (G)</button>
-        <button class="btn" id="m-r" onclick="setTMode('rotate')">التدوير (R)</button>
-        <button class="btn" id="m-s" onclick="setTMode('scale')">التكبير/التصغير (S)</button>
-    </div>
+    <aside class="sidebar-right">
+        <div class="panel">
+            <div class="panel-header">🔍 مستكشف المشهد</div>
+            <ul id="scene-tree">
+                </ul>
+        </div>
+        <div class="panel" id="properties-panel">
+            <div class="panel-header">📝 الخصائص</div>
+            <div class="prop-row">
+                <span>اسم المجسم:</span>
+                <input type="text" id="obj-name" onchange="updateObjName(this.value)">
+            </div>
+            <div class="prop-row">
+                <span>اللون:</span>
+                <input type="color" id="obj-color" onchange="updateObjColor(this.value)">
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-header">🌍 العالم والبيئة</div>
+            <div class="label" style="font-size: 10px; margin-bottom:5px;">نوع الأرض:</div>
+            <select class="btn" onchange="changeGround(this.value)">
+                <option value="green">أرض خضراء</option>
+                <option value="sand">رمال صحراوية</option>
+                <option value="mtn">تضاريس جبلية</option>
+            </select>
+            <div class="prop-row"><span>الرياح:</span></div>
+            <input type="range" min="0" max="0.1" step="0.01" value="0.03" oninput="windStrength = parseFloat(this.value)">
+            <div class="prop-row"><span>الشمس:</span></div>
+            <input type="range" min="0" max="2" step="0.1" value="1.2" oninput="sunLight.intensity = this.value">
+        </div>
+    </aside>
 
-    <div class="panel bottom-right">
-        <div class="label">🌍 أنواع الأرض</div>
-        <button class="btn" onclick="changeGround('green')">🟩 أرض خضراء</button>
-        <button class="btn" onclick="changeGround('sand')">🟨 أرض رملية</button>
-        <button class="btn" onclick="changeGround('mtn')">⛰️ تضاريس وعرة</button>
-        
-        <div class="label">🍃 قوة الرياح</div>
-        <input type="range" min="0" max="0.1" step="0.01" value="0.03" oninput="windStrength = parseFloat(this.value)">
-        
-        <div class="label">☀️ شدة الشمس</div>
-        <input type="range" min="0" max="2" step="0.1" value="1.2" oninput="sunLight.intensity = this.value">
-    </div>
-
-    <div class="panel bottom-left">
-        <button class="btn" style="color:#ff5555; border-color:#522;" onclick="deleteObj()">حذف المختار</button>
-    </div>
-
-    <div id="viewport"></div>
+</div>
 
 <script>
     let scene, camera, renderer, orbit, transform, sunLight, ground, grid;
     let objects = [], windObjects = [];
     let windStrength = 0.03;
+    let selectedObject = null;
 
-    // تشغيل المحرك
     init();
 
     function init() {
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x050505);
+        scene.background = new THREE.Color(0x0a0a0a);
 
-        camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-        camera.position.set(15, 12, 15); // وضعية كاميرا مثالية عند البدء
+        camera = new THREE.PerspectiveCamera(60, (window.innerWidth - 470)/window.innerHeight, 0.1, 1000);
+        camera.position.set(15, 12, 15);
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(window.innerWidth - 470, window.innerHeight);
         renderer.shadowMap.enabled = true;
         document.getElementById('viewport').appendChild(renderer.domElement);
 
-        // 1. شمس المشهد (إضاءة قوية)
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
         sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
         sunLight.position.set(20, 40, 20);
         sunLight.castShadow = true;
         scene.add(sunLight);
 
-        // 2. الشبكة (Grid) تظهر فوراً
-        grid = new THREE.GridHelper(100, 50, 0x444444, 0x222222);
+        grid = new THREE.GridHelper(100, 50, 0x333333, 0x222222);
         scene.add(grid);
 
-        // 3. إنشاء الأرضية الخضراء فوراً
         changeGround('green');
-
-        // 4. مكعب البداية في المنتصف (0,1,0)
         spawn('cube', true); 
 
         orbit = new THREE.OrbitControls(camera, renderer.domElement);
@@ -123,47 +161,25 @@
         scene.add(transform);
         transform.addEventListener('dragging-changed', e => orbit.enabled = !e.value);
 
-        // نظام النقر لاختيار أي مجسم والتحكم به
         window.addEventListener('mousedown', (e) => {
             if(e.target.tagName !== 'CANVAS') return;
-            const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
+            const mouse = new THREE.Vector2(((e.clientX - 220)/(window.innerWidth - 470))*2-1, -(e.clientY/window.innerHeight)*2+1);
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(objects, true);
             if(intersects.length > 0) {
                 let target = intersects[0].object;
                 while(target.parent && target.parent !== scene) target = target.parent;
-                transform.attach(target);
+                selectObject(target);
             }
         });
 
         animate();
     }
 
-    function changeGround(type) {
-        if(ground) scene.remove(ground);
-        const geo = new THREE.PlaneGeometry(100, 100, 40, 40);
-        let color = 0x1d2b1d;
-        if(type === 'sand') color = 0xc2b280;
-        if(type === 'mtn') color = 0x333333;
-        
-        const mat = new THREE.MeshStandardMaterial({ color: color, side: THREE.DoubleSide });
-        if(type === 'mtn') {
-            const pos = geo.attributes.position;
-            for(let i=0; i<pos.count; i++) {
-                let x = pos.getX(i);
-                let y = pos.getY(i);
-                pos.setZ(i, Math.sin(x*0.2) * Math.cos(y*0.2) * 2);
-            }
-        }
-        ground = new THREE.Mesh(geo, mat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-    }
-
     function spawn(type, isInitial = false) {
         let obj;
+        let name = type + "_" + Math.floor(Math.random()*1000);
         if(type === 'tree') {
             obj = new THREE.Group();
             const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.5), new THREE.MeshStandardMaterial({color: 0x4d2600}));
@@ -178,54 +194,96 @@
             obj = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color: 0xdeff9a}));
         }
         
-        if(isInitial) obj.position.set(0, 1, 0);
-        else obj.position.set(Math.random()*10-5, 1, Math.random()*10-5);
-        
+        obj.name = name;
+        obj.position.set(isInitial ? 0 : Math.random()*10-5, 1, isInitial ? 0 : Math.random()*10-5);
         obj.traverse(c => { if(c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
         scene.add(obj);
         objects.push(obj);
+        updateSceneTree();
+        selectObject(obj);
+    }
+
+    function selectObject(obj) {
+        selectedObject = obj;
         transform.attach(obj);
+        document.getElementById('obj-name').value = obj.name;
+        updateSceneTree();
+    }
+
+    function updateSceneTree() {
+        const tree = document.getElementById('scene-tree');
+        tree.innerHTML = "";
+        objects.forEach(obj => {
+            const li = document.createElement('li');
+            li.innerText = obj.name;
+            if(selectedObject === obj) li.className = "selected";
+            li.onclick = () => selectObject(obj);
+            tree.appendChild(li);
+        });
+    }
+
+    function updateObjName(val) { if(selectedObject) { selectedObject.name = val; updateSceneTree(); } }
+    
+    function updateObjColor(val) {
+        if(selectedObject) {
+            selectedObject.traverse(c => { if(c.isMesh) c.material.color.set(val); });
+        }
     }
 
     function setTMode(m) {
-        transform.setMode(m); // هنا يتم التبديل بين (translate, rotate, scale)
-        document.querySelectorAll('.top-left .btn').forEach(b => b.classList.remove('active'));
-        if(m === 'translate') document.getElementById('m-t').classList.add('active');
-        if(m === 'rotate') document.getElementById('m-r').classList.add('active');
-        if(m === 'scale') document.getElementById('m-s').classList.add('active');
+        transform.setMode(m);
+        document.querySelectorAll('.sidebar-left .btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('m-'+m[0]).classList.add('active');
+    }
+
+    function changeGround(type) {
+        if(ground) scene.remove(ground);
+        const geo = new THREE.PlaneGeometry(100, 100, 30, 30);
+        let color = 0x1a241a;
+        if(type === 'sand') color = 0xc2b280;
+        if(type === 'mtn') color = 0x333333;
+        const mat = new THREE.MeshStandardMaterial({ color: color, side: THREE.DoubleSide });
+        ground = new THREE.Mesh(geo, mat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
     }
 
     function deleteObj() {
-        if(transform.object) {
-            const o = transform.object;
-            scene.remove(o);
-            objects = objects.filter(i => i !== o);
-            windObjects = windObjects.filter(i => i !== o);
+        if(selectedObject) {
+            scene.remove(selectedObject);
+            objects = objects.filter(i => i !== selectedObject);
+            windObjects = windObjects.filter(i => i !== selectedObject);
             transform.detach();
+            selectedObject = null;
+            updateSceneTree();
         }
     }
 
     function setView(isView) {
-        document.querySelectorAll('.panel').forEach(p => p.style.display = isView ? 'none' : 'flex');
-        if(isView) { transform.detach(); grid.visible = false; }
-        else { grid.visible = true; }
+        document.querySelector('.sidebar-left').style.display = isView ? 'none' : 'flex';
+        document.querySelector('.sidebar-right').style.display = isView ? 'none' : 'flex';
+        grid.visible = !isView;
+        if(isView) transform.detach();
+        onWindowResize();
     }
 
     function animate() {
         requestAnimationFrame(animate);
         const time = Date.now() * 0.002;
-        windObjects.forEach(o => {
-            o.rotation.z = Math.sin(time) * windStrength;
-        });
+        windObjects.forEach(o => { o.rotation.z = Math.sin(time) * windStrength; });
         orbit.update();
         renderer.render(scene, camera);
     }
 
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth/window.innerHeight;
+    function onWindowResize() {
+        const w = window.innerWidth - (document.querySelector('.sidebar-left').style.display === 'none' ? 0 : 470);
+        camera.aspect = w / window.innerHeight;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+        renderer.setSize(w, window.innerHeight);
+    }
+
+    window.addEventListener('resize', onWindowResize);
 </script>
 </body>
 </html>
