@@ -1,64 +1,44 @@
-* { box-sizing: border-box; }
-body { margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: #eee; background: #111; }
-
-#ui-container {
-    display: flex;
-    flex-direction: row; /* افتراضي للكمبيوتر */
-    width: 100vw;
-    height: 100vh;
+:root {
+    --bg-dark: #121212;
+    --panel-bg: #1e1e1e;
+    --accent: #4caf50;
+    --text: #e0e0e0;
 }
 
+body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); overflow: hidden; }
+
+#ui-container { display: flex; width: 100vw; height: 100vh; }
+
 #sidebar {
-    width: 300px;
-    background: #1e1e1e;
+    width: 320px;
+    background: var(--panel-bg);
     border-right: 1px solid #333;
     display: flex;
     flex-direction: column;
-    padding: 15px;
+    padding: 20px;
     overflow-y: auto;
     direction: rtl;
-    transition: all 0.3s ease;
 }
 
-#renderer-container {
-    flex-grow: 1;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
+#renderer-container { flex-grow: 1; position: relative; }
 
-canvas { display: block; }
+.section { margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 15px; }
 
-/* إعدادات الهاتف */
-@media (max-width: 768px) {
-    #ui-container { flex-direction: column; }
-    #sidebar { 
-        width: 100%; 
-        height: 45%; 
-        border-right: none; 
-        border-bottom: 2px solid #333; 
-    }
-    #renderer-container { height: 55%; }
-}
+/* تنسيق مجموعة التحكم بالمحاور X Y Z */
+.transform-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+.axis-row { display: flex; align-items: center; gap: 10px; }
+.axis-row label { width: 20px; font-weight: bold; font-size: 0.8rem; }
+.axis-row input[type="range"] { flex-grow: 1; accent-color: var(--accent); }
+.axis-row span { width: 35px; font-size: 0.75rem; text-align: left; }
 
-/* تصميم الأزرار والمدخلات */
-.panel-section { margin-bottom: 15px; background: #252525; padding: 10px; border-radius: 8px; }
-h3 { font-size: 0.9rem; margin: 0 0 10px 0; color: #4caf50; border-bottom: 1px solid #333; }
-.button-group { display: flex; gap: 5px; margin-bottom: 5px; }
-button { 
-    flex: 1; padding: 8px; border: 1px solid #444; background: #333; 
-    color: #eee; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+button {
+    background: #333; border: 1px solid #444; color: white; padding: 10px;
+    border-radius: 5px; cursor: pointer; transition: 0.3s; font-size: 0.85rem;
 }
-button:hover { background: #444; border-color: #4caf50; }
-input { width: 100%; background: #111; color: #fff; border: 1px solid #333; padding: 5px; border-radius: 4px; margin-top: 5px; }
+button:hover { background: var(--accent); border-color: var(--accent); }
 
-/* محاكي الهاتف */
-.mobile-view {
-    width: 375px !important;
-    height: 667px !important;
-    border: 12px solid #333 !important;
-    border-radius: 30px !important;
-    box-shadow: 0 0 50px rgba(0,0,0,0.5);
-}
+.mode-selector { display: flex; gap: 5px; background: #111; padding: 5px; border-radius: 8px; margin-bottom: 20px; }
+.mode-selector button { flex: 1; background: transparent; border: none; }
+.mode-selector button.active { background: #333; }
