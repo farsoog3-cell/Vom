@@ -1,7 +1,7 @@
-let scene, camera, renderer, orbit, transform;
+let scene, camera, renderer, orbit, transform, sun;
 let sceneObjects = [];
+let editMode = 'object'; // 'object', 'vertex', 'sculpt'
 
-// تشغيل المحرك
 window.onload = () => {
     initEngine();
     animate();
@@ -19,55 +19,48 @@ function initEngine() {
     renderer.shadowMap.enabled = true;
     document.getElementById('viewport').appendChild(renderer.domElement);
 
-    // الشبكة والإضاءة الأساسية (كما طلبت)
-    scene.add(new THREE.GridHelper(50, 50, 0x333333, 0x222222));
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    
-    const sun = new THREE.DirectionalLight(0xffffff, 1);
-    sun.position.set(10, 20, 10);
+    // 1. إظهار الشمس (مرئية ككرة مضيئة)
+    const sunGeo = new THREE.SphereGeometry(0.5, 16, 16);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+    sunMesh.position.set(10, 20, 10);
+    scene.add(sunMesh);
+
+    sun = new THREE.DirectionalLight(0xffffff, 1.5);
+    sun.position.copy(sunMesh.position);
+    sun.castShadow = true;
     scene.add(sun);
 
-    // إضافة مكعب البداية
-    const startCube = createAssetMesh('cube');
-    startCube.position.set(0, 1, 0);
-    scene.add(startCube);
-    sceneObjects.push(startCube);
+    // 2. الشبكة
+    scene.add(new THREE.GridHelper(50, 50, 0x444444, 0x222222));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
-    // التحكم
+    // 3. أدوات التحكم (Gizmo)
     orbit = new THREE.OrbitControls(camera, renderer.domElement);
     transform = new THREE.TransformControls(camera, renderer.domElement);
     scene.add(transform);
+
+    // ربط الاختيار
     transform.addEventListener('dragging-changed', e => orbit.enabled = !e.value);
 
-    // نظام الاختيار باللمس
+    // 4. إضافة مكعب البداية وتفعيله فوراً للتحكم
+    setTimeout(() => {
+        const startCube = createAssetMesh('cube');
+        startCube.position.set(0, 1, 0);
+        scene.add(startCube);
+        sceneObjects.push(startCube);
+        transform.attach(startCube); // تفعيل التحكم بالمكعب فوراً
+    }, 100);
+
     window.addEventListener('mousedown', onPointerDown);
 }
 
-// وظيفة فتح المكتبة المنبثقة وتعبئتها من ملف library.js
-function openLibrary(category) {
-    const modal = document.getElementById('library-modal');
-    const content = document.getElementById('library-content');
-    content.innerHTML = "";
-    
-    AssetsLibrary[category].forEach(item => {
-        const div = document.createElement('div');
-        div.className = "asset-card";
-        div.innerHTML = `<div>${item.icon}</div><div style="font-size:12px">${item.name}</div>`;
-        div.onclick = () => {
-            const mesh = createAssetMesh(item.type);
-            mesh.position.set(Math.random()*4, 1, Math.random()*4);
-            scene.add(mesh);
-            sceneObjects.push(mesh);
-            transform.attach(mesh);
-            closeLibrary();
-        };
-        content.appendChild(div);
-    });
-    
-    modal.style.display = 'block';
+// تبديل أوضاع العمل (Blender Style)
+function setWorkMode(mode) {
+    editMode = mode;
+    alert("تم الانتقال إلى وضع: " + mode);
+    // هنا مستقبلاً يتم تفعيل "النحات" أو "تعديل النقاط"
 }
-
-function closeLibrary() { document.getElementById('library-modal').style.display = 'none'; }
 
 function onPointerDown(e) {
     if (e.target.tagName !== 'CANVAS') return;
@@ -75,6 +68,7 @@ function onPointerDown(e) {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(sceneObjects, true);
+    
     if (intersects.length > 0) {
         let t = intersects[0].object;
         while(t.parent && t.parent !== scene) t = t.parent;
@@ -83,17 +77,9 @@ function onPointerDown(e) {
 }
 
 function setGizmoMode(m) {
-    transform.setMode(m);
+    transform.setMode(m); // translate (تحريك), rotate (تدوير), scale (شد ومط)
     document.querySelectorAll('.gizmo-tools .btn').forEach(b => b.classList.remove('active'));
     document.getElementById('m-'+m[0]).classList.add('active');
-}
-
-function deleteSelected() {
-    if (transform.object) {
-        scene.remove(transform.object);
-        sceneObjects = sceneObjects.filter(o => o !== transform.object);
-        transform.detach();
-    }
 }
 
 function animate() {
