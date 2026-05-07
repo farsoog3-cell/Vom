@@ -1,68 +1,43 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>محرك الفارس 3D</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="ui-container">
-        <div id="sidebar">
-            <h2 style="text-align:center; color:#4caf50;">الفارس ENGINE</h2>
-            
-            <div class="panel-section">
-                <h3>وضع العرض (المحاكي)</h3>
-                <div class="button-group">
-                    <button onclick="setViewport('pc')">🖥️ كمبيوتر</button>
-                    <button onclick="setViewport('mobile')">📱 هاتف</button>
-                </div>
-            </div>
+<div id="ui-container">
+    <div id="sidebar">
+        <h3>وضع العرض</h3>
+        <div class="mode-selector">
+            <button onclick="setViewport('pc')">🖥️ كمبيوتر</button>
+            <button onclick="setViewport('mobile')">📱 هاتف</button>
+        </div>
 
-            <div class="panel-section">
-                <h3>إضافة كائنات</h3>
-                <div class="button-group">
-                    <button onclick="addCube()">+ مكعب</button>
-                    <button onclick="addSphere()">+ كرة</button>
-                </div>
-                <input type="file" id="file-input" accept=".glb,.gltf" style="display:none;">
-                <button onclick="document.getElementById('file-input').click()" style="width:100%; margin-top:5px; background:#4caf50;">📤 استيراد (Blender/Unity)</button>
-            </div>
-
-            <div class="panel-section" id="transform-panel">
-                <h3>تحكم بالمجسم (شد ومط)</h3>
-                <label>الحجم X (العرض):</label>
-                <input type="range" id="scale-x" min="0.1" max="5" step="0.1" value="1">
-                <label>الحجم Y (الطول):</label>
-                <input type="range" id="scale-y" min="0.1" max="5" step="0.1" value="1">
-                <label>الحجم Z (العمق):</label>
-                <input type="range" id="scale-z" min="0.1" max="5" step="0.1" value="1">
-            </div>
-
-            <div class="panel-section">
-                <h3>الإضاءة والشمس</h3>
-                <label>زاوية الشمس:</label>
-                <input type="range" id="sun-slider" min="0" max="360" value="45">
-            </div>
-
-            <div class="panel-section">
-                <button id="play-btn" onclick="togglePlayMode()" style="background:#2e7d32; font-weight:bold; height:45px;">▶ تشغيل المشهد</button>
+        <div class="section">
+            <h3>إضافة كائنات</h3>
+            <div class="btn-grid">
+                <button onclick="addCube()">+ مكعب</button>
+                <button onclick="addSphere()">+ كرة</button>
             </div>
         </div>
 
-        <div id="renderer-container">
+        <div class="section" id="inspector">
+            <h3>الموقع (Position)</h3>
+            <div class="transform-group">
+                <div class="axis-row"><label>X</label><input type="range" id="pos-x" min="-10" max="10" step="0.1" value="0"><span id="val-pos-x">0</span></div>
+                <div class="axis-row"><label>Y</label><input type="range" id="pos-y" min="0" max="10" step="0.1" value="0.5"><span id="val-pos-y">0.5</span></div>
+                <div class="axis-row"><label>Z</label><input type="range" id="pos-z" min="-10" max="10" step="0.1" value="0"><span id="val-pos-z">0</span></div>
             </div>
-    </div>
 
-    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-      }
-    </script>
-    <script type="module" src="engine.js"></script>
-</body>
-</html>
+            <h3>التدوير (Rotation)</h3>
+            <div class="transform-group">
+                <div class="axis-row"><label>X</label><input type="range" id="rot-x" min="0" max="6.28" step="0.1" value="0"></div>
+                <div class="axis-row"><label>Y</label><input type="range" id="rot-y" min="0" max="6.28" step="0.1" value="0"></div>
+                <div class="axis-row"><label>Z</label><input type="range" id="rot-z" min="0" max="6.28" step="0.1" value="0"></div>
+            </div>
+
+            <h3>التحجيم (Scale)</h3>
+            <div class="transform-group">
+                <div class="axis-row"><label>X</label><input type="range" id="scale-x" min="0.1" max="5" step="0.1" value="1"></div>
+                <div class="axis-row"><label>Y</label><input type="range" id="scale-y" min="0.1" max="5" step="0.1" value="1"></div>
+                <div class="axis-row"><label>Z</label><input type="range" id="scale-z" min="0.1" max="5" step="0.1" value="1"></div>
+            </div>
+        </div>
+
+        <button id="play-btn" onclick="togglePlayMode()" style="width:100%; background:var(--accent); font-weight:bold;">تشغيل المحرك</button>
+    </div>
+    <div id="renderer-container"></div>
+</div>
