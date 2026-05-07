@@ -1,77 +1,90 @@
 :root { 
     --bg-dark: #0a0a0a; 
-    --panel-bg: #1a1a1a;
+    --panel-bg: rgba(26, 26, 26, 0.95);
     --accent: #deff9a; 
-    --text-color: #ffffff;
-    --border-color: #333333;
-    --hover-bg: #252525;
+    --text: #ffffff;
+    --border: #333333;
 }
 
 body, html { 
     margin: 0; padding: 0; height: 100%; overflow: hidden; 
-    background: var(--bg-dark); color: var(--text-color); 
-    font-family: 'Segoe UI', Tahoma, sans-serif; 
+    background: var(--bg-dark); color: var(--text); 
+    font-family: sans-serif; 
 }
 
-/* شريط الأدوات العلوي */
+/* 1. المشهد الخلفي */
+#viewport { 
+    position: absolute; inset: 0; z-index: 1; 
+}
+
+/* 2. شريط الأدوات العلوي */
 .toolbar {
-    position: absolute; top: 0; left: 0; right: 0; height: 55px;
-    background: var(--panel-bg); border-bottom: 1px solid var(--border-color);
-    display: flex; align-items: center; padding: 0 20px; gap: 10px; z-index: 1000;
+    position: absolute; top: 0; left: 0; right: 0; 
+    height: auto; min-height: 50px;
+    background: var(--panel-bg); border-bottom: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; align-items: center; 
+    padding: 10px; gap: 8px; z-index: 1000;
 }
 
-.logo { font-weight: 900; color: var(--accent); margin-left: 30px; letter-spacing: 1px; }
+.logo { font-weight: bold; color: var(--accent); margin-right: 10px; font-size: 14px; }
 
-/* الأزرار */
+/* 3. أدوات التحويل (التي ظهرت فوق بعضها في الصورة) */
+.gizmo-tools {
+    position: absolute; 
+    right: 10px; 
+    top: 70px; /* تحت الشريط العلوي */
+    width: 140px;
+    background: var(--panel-bg); 
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 1000;
+}
+
+.tool-label { font-size: 10px; color: var(--accent); margin-bottom: 4px; opacity: 0.8; }
+
+/* 4. الأزرار بشكل عام */
 .btn {
-    background: var(--hover-bg); border: 1px solid var(--border-color); color: white;
-    padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: 0.2s; font-size: 13px;
+    background: #252525; border: 1px solid var(--border); color: white;
+    padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
 }
 
-.btn:hover { background: var(--accent); color: black; border-color: var(--accent); }
+.btn:hover { background: var(--accent); color: black; }
 .btn.active { background: var(--accent); color: black; font-weight: bold; }
-.delete-btn { border-color: #552222; color: #ff5555; }
-.delete-btn:hover { background: #ff5555; color: white; }
+.delete-btn { color: #ff5e5e; border-color: #442222; }
 
-/* النوافذ المنبثقة (Modals) */
+/* 5. النافذة المنبثقة (Modal) */
 .modal {
-    display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 450px; background: var(--panel-bg); border: 1px solid var(--border-color);
-    border-radius: 12px; z-index: 2000; box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-    animation: fadeIn 0.3s ease;
+    display: none; position: fixed; top: 55%; left: 50%; 
+    transform: translate(-50%, -50%);
+    width: 90%; max-width: 350px; 
+    background: var(--panel-bg); border: 1px solid var(--border);
+    border-radius: 12px; z-index: 2000;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
 }
 
 .modal-header {
-    padding: 15px 20px; border-bottom: 1px solid var(--border-color);
+    padding: 12px; border-bottom: 1px solid var(--border);
     display: flex; justify-content: space-between; align-items: center;
 }
 
-.close { font-size: 24px; cursor: pointer; color: #777; }
-.close:hover { color: white; }
-
 .modal-body {
-    padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
-    max-height: 400px; overflow-y: auto;
+    padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    max-height: 60vh; overflow-y: auto;
 }
 
-/* كروت العناصر داخل المكتبة */
+/* كروت العناصر */
 .asset-card {
-    background: #222; border: 1px solid var(--border-color); border-radius: 8px;
-    padding: 15px; text-align: center; cursor: pointer; transition: 0.2s;
+    background: #222; border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px; text-align: center; font-size: 11px;
 }
 
-.asset-card:hover { border-color: var(--accent); transform: translateY(-3px); background: #2a2a2a; }
-.asset-card div:first-child { font-size: 30px; margin-bottom: 8px; }
+/* خط فاصل */
+hr { border: 0; border-top: 1px solid var(--border); width: 100%; margin: 5px 0; }
 
-/* أدوات التحكم الجانبية (Gizmo) */
-.gizmo-tools {
-    position: absolute; right: 20px; top: 75px; z-index: 1000;
-    display: flex; flex-direction: column; gap: 8px;
-}
-
-#viewport { position: absolute; inset: 0; z-index: 1; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translate(-50%, -45%); }
-    to { opacity: 1; transform: translate(-50%, -50%); }
-}
+/* لإخفاء الأدوات في وضع الرؤية */
+.hidden { display: none !important; }
