@@ -2,55 +2,69 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محرك ألعاب متقدم - الإصدار 2.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>محرك ألعاب متجاوب</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #1a1a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #toolbar {
+        body { margin: 0; overflow: hidden; background-color: #1a1a1a; touch-action: none; }
+        
+        /* زر إظهار/إخفاء القائمة */
+        #menuToggle {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.85);
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            background: #27ae60;
             color: white;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #444;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 220px;
-            user-select: none;
-        }
-        button {
-            background: #444;
-            color: white;
-            border: none;
             padding: 10px;
             border-radius: 5px;
-            cursor: pointer;
-            transition: 0.3s;
-            font-size: 14px;
+            border: none;
+            font-weight: bold;
         }
-        button:hover { background: #666; }
-        .active-mode { background: #27ae60 !important; }
+
+        #toolbar {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 160px; /* تقليل العرض ليناسب الجوال */
+            transition: transform 0.3s ease;
+            z-index: 99;
+        }
+
+        .hidden { transform: translateX(200%); }
+
+        button {
+            background: #333;
+            color: white;
+            border: 1px solid #444;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .active-mode { background: #27ae60 !important; border-color: #fff; }
         .delete-btn { background: #c0392b !important; }
-        .delete-btn:hover { background: #e74c3c !important; }
-        .hint { font-size: 11px; color: #aaa; margin-top: 5px; text-align: center; }
+        h4 { margin: 0; text-align: center; font-size: 14px; }
     </style>
 </head>
 <body>
 
+<button id="menuToggle">القائمة ☰</button>
+
 <div id="toolbar">
-    <h3 style="margin:0 0 10px 0; text-align:center;">لوحة التحكم</h3>
-    
-    <button id="modeTranslate" class="active-mode">وضع التحريك (Arrows)</button>
-    <button id="modeScale">وضع الشد والمط (Scale)</button>
-    <hr style="width:100%; border:0; border-top:1px solid #444;">
-    <button id="changeTrees">تغيير/تجديد الأشجار</button>
-    <button id="changeGround">تغيير شكل الأرضية</button>
-    <button id="deleteObject" class="delete-btn">حذف المجسم المحدد</button>
-    
-    <div class="hint">انقر على أي مجسم لاختياره واستخدام الأسهم</div>
+    <h4>التحكم</h4>
+    <button id="modeTranslate" class="active-mode">تحريك (Arrows)</button>
+    <button id="modeScale">شد ومط (Scale)</button>
+    <button id="changeTrees">تجديد الأشجار</button>
+    <button id="changeGround">تغيير الأرض</button>
+    <button id="deleteObject" class="delete-btn">حذف المحدد</button>
 </div>
 
 <script type="importmap">
@@ -67,158 +81,117 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { TransformControls } from 'three/addons/controls/TransformControls.js';
 
-    // --- الإعدادات الأساسية ---
+    // إخفاء وإظهار القائمة
+    const toolbar = document.getElementById('toolbar');
+    document.getElementById('menuToggle').onclick = () => {
+        toolbar.classList.toggle('hidden');
+    };
+
+    // إعدادات المشهد
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a1a);
-    scene.fog = new THREE.Fog(0x1a1a1a, 10, 50);
-
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(15, 15, 15);
+    camera.position.set(10, 10, 10);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // تحسين الجودة على الجوال
     document.body.appendChild(renderer.domElement);
 
-    // --- الإضاءة ---
+    // الإضاءة
     const sunLight = new THREE.DirectionalLight(0xffffff, 2);
-    sunLight.position.set(10, 20, 10);
-    sunLight.castShadow = true;
+    sunLight.position.set(5, 10, 5);
     scene.add(sunLight);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
-    // --- الأرضية ---
-    const groundGeo = new THREE.PlaneGeometry(50, 50);
-    const groundMat = new THREE.MeshPhongMaterial({ color: 0x222222 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
+    // الأرضية والشبكة
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshPhongMaterial({ color: 0x228B22 }));
     ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
     scene.add(ground);
-    scene.add(new THREE.GridHelper(50, 50, 0x333333, 0x333333));
+    scene.add(new THREE.GridHelper(40, 20, 0x444444, 0x444444));
 
-    // --- أدوات التحكم ---
+    // التحكم
     const orbit = new OrbitControls(camera, renderer.domElement);
-    
     const transformControl = new TransformControls(camera, renderer.domElement);
     scene.add(transformControl);
 
-    // تعطيل تدوير الكاميرا عند استخدام الأسهم
-    transformControl.addEventListener('dragging-changed', (event) => {
-        orbit.enabled = !event.value;
-    });
+    transformControl.addEventListener('dragging-changed', (e) => orbit.enabled = !e.value);
 
-    // --- إدارة الكائنات ---
-    let treesGroup = new THREE.Group();
-    scene.add(treesGroup);
+    // المكعب
+    const cube = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshPhongMaterial({ color: 0x3498db }));
+    cube.position.y = 1;
+    scene.add(cube);
 
-    const boxGeo = new THREE.BoxGeometry(2, 2, 2);
-    const boxMat = new THREE.MeshPhongMaterial({ color: 0x3498db });
-    const mainCube = new THREE.Mesh(boxGeo, boxMat);
-    mainCube.position.y = 1;
-    mainCube.castShadow = true;
-    mainCube.name = "Cube";
-    scene.add(mainCube);
+    // نظام الأشجار
+    let trees = new THREE.Group();
+    scene.add(trees);
 
-    // إنشاء الأشجار
-    function spawnTrees() {
-        scene.remove(treesGroup);
-        treesGroup = new THREE.Group();
-        const colors = [0x2ecc71, 0x27ae60, 0x1e8449, 0xd4ac0d];
-        
-        for (let i = 0; i < 15; i++) {
+    function addTrees() {
+        scene.remove(trees);
+        trees = new THREE.Group();
+        for(let i=0; i<10; i++) {
             const tree = new THREE.Group();
-            // جذع
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 1.5), new THREE.MeshPhongMaterial({color: 0x5d4037}));
-            trunk.position.y = 0.75;
-            tree.add(trunk);
-            // أوراق
-            const isPine = Math.random() > 0.5;
-            const leafGeo = isPine ? new THREE.ConeGeometry(1, 2.5, 8) : new THREE.SphereGeometry(1, 8, 8);
-            const leafMat = new THREE.MeshPhongMaterial({color: colors[Math.floor(Math.random()*colors.length)]});
-            const leaves = new THREE.Mesh(leafGeo, leafMat);
-            leaves.position.y = isPine ? 2.5 : 2.2;
-            tree.add(leaves);
-
-            tree.position.set(Math.random()*40-20, 0, Math.random()*40-20);
-            tree.traverse(child => { if(child.isMesh) { child.castShadow = true; child.userData.parentGroup = tree; } });
-            treesGroup.add(tree);
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1), new THREE.MeshPhongMaterial({color: 0x5d4037}));
+            const leaves = new THREE.Mesh(new THREE.SphereGeometry(0.8), new THREE.MeshPhongMaterial({color: 0x2ecc71}));
+            leaves.position.y = 1;
+            tree.add(trunk, leaves);
+            tree.position.set(Math.random()*30-15, 0.5, Math.random()*30-15);
+            trees.add(tree);
         }
-        scene.add(treesGroup);
+        scene.add(trees);
     }
-    spawnTrees();
+    addTrees();
 
-    // --- نظام التفاعل (Raycaster) ---
+    // التفاعل باللمس/الضغط
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    window.addEventListener('mousedown', (event) => {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    const onSelect = (event) => {
+        let clientX = event.clientX || (event.touches && event.touches[0].clientX);
+        let clientY = event.clientY || (event.touches && event.touches[0].clientY);
+        
+        if(!clientX) return;
+
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects([mainCube, ...treesGroup.children], true);
+        const intersects = raycaster.intersectObjects([cube, ...trees.children], true);
 
         if (intersects.length > 0) {
-            let object = intersects[0].object;
-            // إذا كان الكائن جزءاً من شجرة، نختار الشجرة كاملة
-            while(object.parent && object.parent !== scene && object.parent !== treesGroup) {
-                object = object.parent;
-            }
-            transformControl.attach(object);
-        } else if (!transformControl.dragging) {
-            // transformControl.detach(); // اختياري: إلغاء الاختيار عند النقر في الفراغ
-        }
-    });
-
-    // --- أزرار الواجهة ---
-    document.getElementById('modeTranslate').onclick = (e) => {
-        transformControl.setMode('translate');
-        updateButtons(e.target);
-    };
-
-    document.getElementById('modeScale').onclick = (e) => {
-        transformControl.setMode('scale');
-        updateButtons(e.target);
-    };
-
-    document.getElementById('changeTrees').onclick = spawnTrees;
-
-    document.getElementById('changeGround').onclick = () => {
-        const colors = [0x1a1a1a, 0x2c3e50, 0x145a32, 0x641e16];
-        ground.material.color.setHex(colors[Math.floor(Math.random()*colors.length)]);
-    };
-
-    document.getElementById('deleteObject').onclick = () => {
-        if (transformControl.object) {
-            const obj = transformControl.object;
-            transformControl.detach();
-            if (obj === mainCube) {
-                scene.remove(obj);
-            } else {
-                treesGroup.remove(obj);
-            }
+            let obj = intersects[0].object;
+            while(obj.parent && obj.parent !== scene && obj.parent !== trees) obj = obj.parent;
+            transformControl.attach(obj);
         }
     };
 
-    function updateButtons(activeBtn) {
+    window.addEventListener('mousedown', onSelect);
+    window.addEventListener('touchstart', onSelect);
+
+    // الأزرار
+    document.getElementById('modeTranslate').onclick = (e) => { transformControl.setMode('translate'); updateUI(e.target); };
+    document.getElementById('modeScale').onclick = (e) => { transformControl.setMode('scale'); updateUI(e.target); };
+    document.getElementById('changeTrees').onclick = addTrees;
+    document.getElementById('changeGround').onclick = () => ground.material.color.setHex(Math.random() * 0xffffff);
+    document.getElementById('deleteObject').onclick = () => { if(transformControl.object) { let o = transformControl.object; transformControl.detach(); o.parent.remove(o); } };
+
+    function updateUI(btn) {
         document.getElementById('modeTranslate').classList.remove('active-mode');
         document.getElementById('modeScale').classList.remove('active-mode');
-        activeBtn.classList.add('active-mode');
+        btn.classList.add('active-mode');
     }
 
-    // --- حلقة التحريك ---
     function animate() {
         requestAnimationFrame(animate);
         renderer.render(scene, camera);
     }
+    animate();
 
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
-
-    animate();
 </script>
 </body>
 </html>
