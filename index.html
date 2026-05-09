@@ -3,195 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>محرك ألعاب متجاوب</title>
+    <title>Farsoog Web Engine - المحرك المتكامل</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #1a1a1a; touch-action: none; }
-        
-        /* زر إظهار/إخفاء القائمة */
-        #menuToggle {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 100;
-            background: #27ae60;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-            font-weight: bold;
-        }
-
-        #toolbar {
-            position: absolute;
-            top: 60px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 12px;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 160px; /* تقليل العرض ليناسب الجوال */
-            transition: transform 0.3s ease;
-            z-index: 99;
-        }
-
-        .hidden { transform: translateX(200%); }
-
-        button {
-            background: #333;
-            color: white;
-            border: 1px solid #444;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        .active-mode { background: #27ae60 !important; border-color: #fff; }
-        .delete-btn { background: #c0392b !important; }
-        h4 { margin: 0; text-align: center; font-size: 14px; }
+        body { margin: 0; overflow: hidden; touch-action: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #joystick-container { position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; display: none; touch-action: none; border: 2px solid rgba(255,255,255,0.3); }
+        #joystick-stick { position: absolute; width: 50px; height: 50px; background: white; border-radius: 50%; top: 35px; left: 35px; opacity: 0.8; }
+        .ui-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
-<body>
+<body class="bg-black">
 
-<button id="menuToggle">القائمة ☰</button>
-
-<div id="toolbar">
-    <h4>التحكم</h4>
-    <button id="modeTranslate" class="active-mode">تحريك (Arrows)</button>
-    <button id="modeScale">شد ومط (Scale)</button>
-    <button id="changeTrees">تجديد الأشجار</button>
-    <button id="changeGround">تغيير الأرض</button>
-    <button id="deleteObject" class="delete-btn">حذف المحدد</button>
-</div>
-
-<script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-    }
-</script>
-
-<script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { TransformControls } from 'three/addons/controls/TransformControls.js';
-
-    // إخفاء وإظهار القائمة
-    const toolbar = document.getElementById('toolbar');
-    document.getElementById('menuToggle').onclick = () => {
-        toolbar.classList.toggle('hidden');
-    };
-
-    // إعدادات المشهد
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a1a);
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(10, 10, 10);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // تحسين الجودة على الجوال
-    document.body.appendChild(renderer.domElement);
-
-    // الإضاءة
-    const sunLight = new THREE.DirectionalLight(0xffffff, 2);
-    sunLight.position.set(5, 10, 5);
-    scene.add(sunLight);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
-    // الأرضية والشبكة
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshPhongMaterial({ color: 0x228B22 }));
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
-    scene.add(new THREE.GridHelper(40, 20, 0x444444, 0x444444));
-
-    // التحكم
-    const orbit = new OrbitControls(camera, renderer.domElement);
-    const transformControl = new TransformControls(camera, renderer.domElement);
-    scene.add(transformControl);
-
-    transformControl.addEventListener('dragging-changed', (e) => orbit.enabled = !e.value);
-
-    // المكعب
-    const cube = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshPhongMaterial({ color: 0x3498db }));
-    cube.position.y = 1;
-    scene.add(cube);
-
-    // نظام الأشجار
-    let trees = new THREE.Group();
-    scene.add(trees);
-
-    function addTrees() {
-        scene.remove(trees);
-        trees = new THREE.Group();
-        for(let i=0; i<10; i++) {
-            const tree = new THREE.Group();
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1), new THREE.MeshPhongMaterial({color: 0x5d4037}));
-            const leaves = new THREE.Mesh(new THREE.SphereGeometry(0.8), new THREE.MeshPhongMaterial({color: 0x2ecc71}));
-            leaves.position.y = 1;
-            tree.add(trunk, leaves);
-            tree.position.set(Math.random()*30-15, 0.5, Math.random()*30-15);
-            trees.add(tree);
-        }
-        scene.add(trees);
-    }
-    addTrees();
-
-    // التفاعل باللمس/الضغط
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    const onSelect = (event) => {
-        let clientX = event.clientX || (event.touches && event.touches[0].clientX);
-        let clientY = event.clientY || (event.touches && event.touches[0].clientY);
+    <!-- لوحة التحكم الاحترافية -->
+    <div id="ui-panel" class="ui-card fixed top-5 right-5 w-72 p-5 rounded-2xl text-white shadow-2xl z-50">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <span class="text-blue-400">⚙️</span> إعدادات المحرك
+        </h2>
         
-        if(!clientX) return;
+        <div class="space-y-4">
+            <!-- تبديل الأرضية -->
+            <div>
+                <label class="text-sm text-gray-400 mb-1 block">نوع البيئة</label>
+                <select id="terrainSelect" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm outline-none">
+                    <option value="grass">عشب أخضر</option>
+                    <option value="sand">رمل صحراوي</option>
+                    <option value="water">منطقة مائية</option>
+                </select>
+            </div>
 
-        mouse.x = (clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+            <!-- تبديل الوقت -->
+            <button id="dayNightBtn" class="w-full bg-blue-600 hover:bg-blue-500 transition p-2 rounded-lg font-medium">
+                🌙 تبديل (ليل / نهار)
+            </button>
 
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects([cube, ...trees.children], true);
+            <!-- التحكم بالطقس -->
+            <button id="rainBtn" class="w-full bg-slate-700 hover:bg-slate-600 transition p-2 rounded-lg font-medium flex justify-between items-center px-4">
+                <span>🌧️ نظام المطر</span>
+                <span id="rainStatus" class="text-xs bg-red-500 px-2 py-0.5 rounded-full">معطل</span>
+            </button>
 
-        if (intersects.length > 0) {
-            let obj = intersects[0].object;
-            while(obj.parent && obj.parent !== scene && obj.parent !== trees) obj = obj.parent;
-            transformControl.attach(obj);
-        }
-    };
+            <!-- إضافة لاعب -->
+            <button id="addPlayerBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 transition p-2 rounded-lg font-medium">
+                👤 إضافة لاعب جاهز
+            </button>
+        </div>
 
-    window.addEventListener('mousedown', onSelect);
-    window.addEventListener('touchstart', onSelect);
+        <div class="mt-6 pt-4 border-t border-slate-700 text-[10px] text-gray-500 text-center">
+            التحكم: WASD للكمبيوتر | الجويستيك للموبايل
+        </div>
+    </div>
 
-    // الأزرار
-    document.getElementById('modeTranslate').onclick = (e) => { transformControl.setMode('translate'); updateUI(e.target); };
-    document.getElementById('modeScale').onclick = (e) => { transformControl.setMode('scale'); updateUI(e.target); };
-    document.getElementById('changeTrees').onclick = addTrees;
-    document.getElementById('changeGround').onclick = () => ground.material.color.setHex(Math.random() * 0xffffff);
-    document.getElementById('deleteObject').onclick = () => { if(transformControl.object) { let o = transformControl.object; transformControl.detach(); o.parent.remove(o); } };
+    <!-- أزرار التحكم للموبايل -->
+    <div id="joystick-container">
+        <div id="joystick-stick"></div>
+    </div>
 
-    function updateUI(btn) {
-        document.getElementById('modeTranslate').classList.remove('active-mode');
-        document.getElementById('modeScale').classList.remove('active-mode');
-        btn.classList.add('active-mode');
-    }
+    <script>
+        // --- الإعدادات الأساسية ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87ceeb);
+        scene.fog = new THREE.FogExp2(0x87ceeb, 0.01);
 
-    function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-</script>
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // --- الإضاءة ---
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        sunLight.position.set(10, 20, 10);
+        scene.add(sunLight);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambient);
+
+        // --- الأرضية ---
+        const floorGeo = new THREE.PlaneGeometry(200, 200);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x348C31 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
+
+        // --- نظام المطر (Particles) ---
+        const rainGeo = new THREE.BufferGeometry();
+        const rainCount = 5000;
+        const positions = new Float32Array(rainCount * 3);
+        for(let i=0; i<rainCount*3; i++) positions[i] = (Math.random() - 0.5) * 100;
+        rainGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const rainMat = new THREE.PointsMaterial({ color: 0xaaaaaa, size: 0.1, transparent: true });
+        const rain = new THREE.Points(rainGeo, rainMat);
+        let rainEnabled = false;
+
+        // --- اللاعب (صندوق مؤقت يمثل الشخصية) ---
+        let player = null;
+        const playerSpeed = 0.2;
+        const moveKeys = { w: false, a: false, s: false, d: false };
+
+        // --- الوظائف ---
+
+        // 1. إضافة اللاعب
+        document.getElementById('addPlayerBtn').onclick = () => {
+            if(player) return;
+            const geo = new THREE.CapsuleGeometry(0.5, 1, 4, 8);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x00ffcc });
+            player = new THREE.Mesh(geo, mat);
+            player.position.y = 1;
+            scene.add(player);
+            camera.position.set(0, 5, 10);
+        };
+
+        // 2. تبديل البيئة
+        document.getElementById('terrainSelect').onchange = (e) => {
+            const val = e.target.value;
+            if(val === 'grass') floor.material.color.setHex(0x348C31);
+            else if(val === 'sand') floor.material.color.setHex(0xC2B280);
+            else if(val === 'water') floor.material.color.setHex(0x0077be);
+        };
+
+        // 3. ليل ونهار
+        let isDay = true;
+        document.getElementById('dayNightBtn').onclick = () => {
+            isDay = !isDay;
+            if(isDay) {
+                scene.background.setHex(0x87ceeb);
+                sunLight.intensity = 1.2;
+                ambient.intensity = 0.4;
+            } else {
+                scene.background.setHex(0x0a0a12);
+                sunLight.intensity = 0.1;
+                ambient.intensity = 0.05;
+            }
+        };
+
+        // 4. المطر
+        document.getElementById('rainBtn').onclick = () => {
+            rainEnabled = !rainEnabled;
+            const status = document.getElementById('rainStatus');
+            if(rainEnabled) {
+                scene.add(rain);
+                status.innerText = "يعمل";
+                status.className = "text-xs bg-green-500 px-2 py-0.5 rounded-full";
+            } else {
+                scene.remove(rain);
+                status.innerText = "معطل";
+                status.className = "text-xs bg-red-500 px-2 py-0.5 rounded-full";
+            }
+        };
+
+        // --- التحكم ---
+        window.onkeydown = (e) => moveKeys[e.key.toLowerCase()] = true;
+        window.onkeyup = (e) => moveKeys[e.key.toLowerCase()] = false;
+
+        // إظهار الجويستيك إذا كان المس موجوداً (موبايل)
+        if ('ontouchstart' in window) {
+            document.getElementById('joystick-container').style.display = 'block';
+        }
+
+        // --- حلقة التحديث المستمر ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // حركة المطر
+            if(rainEnabled) {
+                const pos = rain.geometry.attributes.position.array;
+                for(let i=1; i<pos.length; i+=3) {
+                    pos[i] -= 0.5;
+                    if(pos[i] < 0) pos[i] = 50;
+                }
+                rain.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // حركة اللاعب
+            if(player) {
+                if(moveKeys.w) player.position.z -= playerSpeed;
+                if(moveKeys.s) player.position.z += playerSpeed;
+                if(moveKeys.a) player.position.x -= playerSpeed;
+                if(moveKeys.d) player.position.x += playerSpeed;
+                
+                // الكاميرا تتبع اللاعب
+                camera.position.lerp(new THREE.Vector3(player.position.x, player.position.y + 5, player.position.z + 10), 0.1);
+                camera.lookAt(player.position);
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        window.onresize = () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+
+        animate();
+    </script>
 </body>
 </html>
