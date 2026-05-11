@@ -10,23 +10,24 @@ class AlmazEngine {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.isPlaying = false;
         this.player = null;
-        this.pSpeed = 4;
+        this.pSpeed = 5;
         this.keys = {};
         this.init();
     }
 
     init() {
-        this.scene.background = new THREE.Color(0x0a0a0a);
+        this.scene.background = new THREE.Color(0x050505);
         this.camera.position.set(400, 400, 400);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.shadowMap.enabled = true;
         document.body.appendChild(this.renderer.domElement);
 
-        this.scene.add(new THREE.GridHelper(2000, 50, 0x444444, 0x222222));
-        this.scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        this.scene.add(new THREE.GridHelper(1000, 40, 0x444444, 0x222222));
+        this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
-        // أهم خطوة: ربط الأنظمة بـ window لتعمل أزرار HTML
+        // الربط العالمي الهام جداً
         window.engine = this;
         window.terminal = new TerminalSystem(this);
         window.workshop = new WorkshopSystem(this);
@@ -40,7 +41,7 @@ class AlmazEngine {
     togglePlay() {
         this.isPlaying = !this.isPlaying;
         this.controls.enabled = !this.isPlaying;
-        console.log("Play Mode:", this.isPlaying);
+        alert(this.isPlaying ? "وضع اللعب: تحرك بالأسهم" : "وضع التحرير");
     }
 
     animate() {
@@ -51,8 +52,8 @@ class AlmazEngine {
             if (this.keys['ArrowLeft']) this.player.rotation.y += 0.05;
             if (this.keys['ArrowRight']) this.player.rotation.y -= 0.05;
 
-            const offset = new THREE.Vector3(0, 100, -200).applyMatrix4(this.player.matrixWorld);
-            this.camera.position.lerp(offset, 0.1);
+            const camOffset = new THREE.Vector3(0, 120, -250).applyMatrix4(this.player.matrixWorld);
+            this.camera.position.lerp(camOffset, 0.1);
             this.camera.lookAt(this.player.position);
         }
         this.renderer.render(this.scene, this.camera);
