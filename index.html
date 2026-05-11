@@ -2,44 +2,62 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Almaz Engine Pro | Modular</title>
-    <link rel="stylesheet" href="style.css"> <!-- اختياري لو وضعت الستايل بملف منفصل -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almaz Engine Pro | Professional Edition</title>
     <style>
-        :root { --gold: #f1c40f; --panel: rgba(20, 20, 20, 0.95); }
+        :root { --gold: #f1c40f; --bg-dark: rgba(15, 15, 15, 0.95); --accent: #3498db; }
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
-        #editor-panel { position: absolute; top: 10px; right: 10px; width: 190px; background: var(--panel); border: 1px solid rgba(241,196,15,0.3); padding: 12px; border-radius: 15px; color: white; z-index: 1000; }
-        #terminal-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; background: rgba(0,0,0,0.9); border: 1px solid var(--gold); border-radius: 10px; padding: 10px; display: none; z-index: 3000; }
-        #terminal-log { height: 60px; overflow-y: auto; color: #2ecc71; font-size: 12px; font-family: monospace; }
-        #terminal-input { width: 100%; background: transparent; border: none; color: white; outline: none; border-top: 1px solid #333; }
-        #mobileControls { position: absolute; bottom: 30px; left: 30px; display: none; grid-template-columns: repeat(3, 60px); gap: 10px; }
-        .joy-btn { width: 60px; height: 60px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid white; }
+        
+        /* لوحة الأدوات الجانبية */
+        #editor-ui {
+            position: absolute; top: 10px; right: 10px; width: 220px;
+            background: var(--bg-dark); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 12px; color: white; z-index: 1000;
+            backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        button { 
+            padding: 10px; border-radius: 6px; border: none; cursor: pointer; 
+            font-weight: bold; transition: 0.3s; background: #2c3e50; color: white;
+        }
+        button:hover { opacity: 0.8; transform: scale(1.02); }
+        .play-btn { background: #2ecc71; }
+        .export-btn { background: #e67e22; }
+
+        /* لوحة الأوامر */
+        #terminal-box {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 80%; max-width: 600px; background: rgba(0,0,0,0.8);
+            border-left: 4px solid var(--gold); padding: 10px; display: none; z-index: 2000;
+        }
+        #terminal-input { width: 100%; background: transparent; border: none; color: #2ecc71; outline: none; font-family: monospace; }
+        
+        #mobile-joy { position: absolute; bottom: 40px; left: 40px; display: none; z-index: 1000; }
     </style>
 </head>
 <body>
 
-<div id="editor-panel">
-    <button onclick="window.engine.togglePlay()" style="background:#2ecc71; width:100%; padding:10px; color:white; border:none; border-radius:8px; cursor:pointer;">🎮 وضع اللعب</button>
-    <hr>
-    <button onclick="window.terminal.toggle()" style="width:100%; margin-top:5px;">📟 الأوامر (T)</button>
-    <button onclick="document.getElementById('fileInput').click()" style="width:100%; margin-top:5px;">📂 استيراد</button>
-    <input type="file" id="fileInput" style="display:none" onchange="window.workshop.import(event)">
+<div id="editor-ui">
+    <h3 style="margin:0; color:var(--gold); font-size:14px;">💎 Almaz Pro Engine</h3>
+    <div class="btn-group">
+        <button class="play-btn" onclick="window.engine.togglePlay()">🎮 وضع اللعب / تحرير</button>
+        <button onclick="window.terminal.toggle()">📟 الأوامر (T)</button>
+        <hr style="width:100%; border:0.5px solid #333;">
+        <button onclick="document.getElementById('fileIn').click()">📂 استيراد من الورشة</button>
+        <input type="file" id="fileIn" style="display:none" onchange="window.workshop.import(event)">
+        <button class="export-btn" onclick="window.workshop.exportGame()">📥 تصدير اللعبة النهائية</button>
+    </div>
 </div>
 
-<div id="terminal-container">
-    <div id="terminal-log">Almaz Engine Modular Ready...</div>
+<div id="terminal-box">
+    <div id="t-log" style="color:#888; font-size:11px; margin-bottom:5px;">Terminal Ready...</div>
     <input type="text" id="terminal-input" placeholder="اكتب أمرك هنا...">
-</div>
-
-<div id="mobileControls">
-    <div></div><div class="joy-btn" id="btnUp">▲</div><div></div>
-    <div class="joy-btn" id="btnLeft">◀</div><div class="joy-btn" id="btnDown">▼</div><div class="joy-btn" id="btnRight">▶</div>
 </div>
 
 <script type="importmap">
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
 </script>
-
-<!-- استدعاء الملفات البرمجية -->
 <script type="module" src="main.js"></script>
 </body>
 </html>
