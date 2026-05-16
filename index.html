@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Morken Generals: Zero Hour Interface with Settings</title>
+    <style>
+        :root { 
+            --zh-green: #00ff33;
+            --zh-dark-green: #003300;
+            --zh-bg: rgba(6, 18, 8, 0.95);
+            --zh-border: #11aa22;
+        }
+        body { margin: 0; overflow: hidden; background: #050a05; font-family: 'Courier New', Courier, monospace; touch-action: none; user-select: none; }
+        
+        #ui-layer { position: absolute; inset: 0; pointer-events: none; z-index: 100; }
+        .pointer-all { pointer-events: all; }
+
+        #rotate-alert {
+            position: fixed; inset: 0; background: #000; z-index: 999;
+            display: none; flex-direction: column; align-items: center; justify-content: center; color: var(--zh-green); text-align: center;
+        }
+        @media (orientation: portrait) { #rotate-alert { display: flex; } }
+
+        /* شريط واجهة التحكم السفلي */
+        #command-bar { 
+            position: absolute; bottom: 0; left: 0; right: 0; height: 140px;
+            background: var(--zh-bg); border-top: 3px solid var(--zh-border);
+            display: grid; grid-template-columns: 160px 1fr 240px; padding: 0;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.8); box-sizing: border-box;
+        }
+
+        #radar-section { border-right: 2px solid var(--zh-border); background: #020803; position: relative; display: flex; align-items: center; justify-content: center; }
+        #mini-map { width: 110px; height: 110px; background: #001100; border: 2px solid var(--zh-green); position: relative; overflow: hidden; box-shadow: inset 0 0 15px rgba(0,255,51,0.3); }
+        #minimap-canvas { width: 100%; height: 100%; background: #030f04; }
+        
+        #radar-sweep { position: absolute; inset: 0; background: linear-gradient(30deg, rgba(0,255,51,0) 40%, rgba(0,255,51,0.15) 50%, rgba(0,255,51,0) 60%); animation: sweep 3s linear infinite; pointer-events: none; }
+        @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        #center-hud { padding: 10px; display: flex; flex-direction: column; justify-content: space-between; border-right: 2px solid var(--zh-border); }
+        .hud-row { display: flex; gap: 10px; align-items: center; }
+        
+        #power-grid { display: flex; gap: 2px; background: #001100; padding: 3px; border: 1px solid var(--zh-border); width: 120px; height: 12px; }
+        .power-bar { flex: 1; background: var(--zh-green); opacity: 0.8; }
+        .zh-label { color: var(--zh-green); font-size: 11px; font-weight: bold; text-shadow: 0 0 4px rgba(0,255,51,0.5); }
+
+        .btn-zh-action { background: #002200; border: 1px solid var(--zh-green); color: var(--zh-green); padding: 4px 8px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-zh-action:hover:not(:disabled) { background: var(--zh-green); color: #000; }
+        .btn-zh-action:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        #selection-profile { background: rgba(0, 34, 0, 0.6); border: 1px solid var(--zh-green); padding: 5px 15px; display: flex; align-items: center; gap: 10px; min-width: 180px; height: 45px; }
+        #profile-icon { font-size: 22px; }
+        #profile-name { color: #fff; font-size: 11px; font-weight: bold; }
+
+        #build-matrix { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 4px; padding: 6px; background: #030d04; }
+        .btn-zh-grid { background: rgba(0, 40, 0, 0.7); border: 1px solid #11aa22; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; position: relative; overflow: hidden; height: 58px; }
+        .btn-zh-grid:hover:not(:disabled), .btn-zh-grid.active { border-color: var(--zh-green); background: rgba(0,255,51,0.15); color: var(--zh-green); }
+        .btn-zh-grid span { font-size: 16px; margin-bottom: 1px; }
+        .btn-zh-grid:disabled { opacity: 0.15; cursor: not-allowed; border-color: #002200; }
+        .btn-zh-grid .cost-tag { color: var(--zh-green); font-size: 8px; font-family: Arial, sans-serif; }
+        .build-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--zh-green); width: 0%; }
+
+        #money-panel { position: absolute; top: 15px; right: 20px; color: var(--zh-green); background: var(--zh-bg); padding: 5px 15px; border: 1px solid var(--zh-border); font-size: 14px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px; }
+        
+        /* أزرار الزوايا العلوية اليسارية */
+        .top-btn { position: absolute; top: 15px; background: var(--zh-bg); color: var(--zh-green); border: 1px solid var(--zh-border); width: 36px; height: 36px; cursor: pointer; pointer-events: all; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .top-btn:hover { background: rgba(0,255,51,0.1); }
+        #fullscreen-btn { left: 15px; }
+        #settings-btn { left: 60px; }
+
+        /* نافذة الإعدادات العسكرية الكلاسيكية */
+        #settings-menu {
+            position: absolute; inset: 0; margin: auto; width: 340px; height: 300px;
+            background: var(--zh-bg); border: 2px solid var(--zh-green);
+            box-shadow: 0 0 30px rgba(0, 255, 51, 0.3); z-index: 300;
+            display: none; flex-direction: column; padding: 15px; box-sizing: border-box;
+        }
+        .settings-header { color: var(--zh-green); font-size: 16px; font-weight: bold; border-bottom: 1px solid var(--zh-border); padding-bottom: 5px; margin-bottom: 15px; text-align: center; }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: #fff; font-size: 12px; }
+        .settings-row input[type="range"] { accent-color: var(--zh-green); width: 140px; cursor: pointer; }
+        .btn-group { display: flex; gap: 5px; }
+        .btn-setting-option { background: #002200; border: 1px solid var(--zh-border); color: #fff; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+        .btn-setting-option.active { background: var(--zh-green); color: #000; font-weight: bold; }
+        .btn-close-settings { background: #550000; border: 1px solid #ff3333; color: #fff; padding: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-top: auto; }
+        .btn-close-settings:hover { background: #880000; }
+
+        #notification-container { position: absolute; top: 70px; left: 15px; width: 280px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 200; }
+        .toast-msg { background: var(--zh-bg); color: #fff; border-right: 4px solid var(--zh-green); padding: 8px 12px; font-size: 11px; font-weight: bold; text-align: right; box-shadow: 0 4px 10px rgba(0,0,0,0.5); opacity: 0; transform: translateY(-10px); transition: all 0.2s ease; }
+        .toast-msg.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<div id="rotate-alert">🔄 Please Rotate Your Device for Battle Command</div>
+
+<div id="ui-layer">
+    <div id="money-panel">💵 <span id="money-txt">3000</span></div>
+    
+    <!-- الأزرار العلوية -->
+    <button id="fullscreen-btn" class="top-btn pointer-all" title="ملء الشاشة">📺</button>
+    <button id="settings-btn" class="top-btn pointer-all" title="الإعدادات">⚙️</button>
+    
+    <div id="notification-container"></div>
+
+    <!-- نافذة الإعدادات المصممة بنمط القوائم العسكرية -->
+    <div id="settings-menu" class="pointer-all">
+        <div class="settings-header">💻 خيارات الجنرال التكتيكية</div>
+        
+        <div class="settings-row">
+            <span>مستوى الموسيقى:</span>
+            <input type="range" id="volume-music" min="0" max="100" value="75">
+        </div>
+        <div class="settings-row">
+            <span>المؤثرات الصوتية:</span>
+            <input type="range" id="volume-sfx" min="0" max="100" value="90">
+        </div>
+        <div class="settings-row">
+            <span>سرعة اللعبة (Game Speed):</span>
+            <input type="range" id="game-speed" min="50" max="150" value="100">
+        </div>
+        <div class="settings-row">
+            <span>الجودة الرسومية:</span>
+            <div class="btn-group">
+                <button class="btn-setting-option" id="fx-low">منخفضة</button>
+                <button class="btn-setting-option active" id="fx-high">عالية</button>
+            </div>
+        </div>
+        
+        <button class="btn-close-settings" id="btn-close-settings">← العودة لأرض المعركة</button>
+    </div>
+
+    <!-- شريط التحكم السفلي الكامل بنمط Zero Hour -->
+    <div id="command-bar" class="pointer-all">
+        <div id="radar-section">
+            <div id="mini-map">
+                <canvas id="minimap-canvas" width="110" height="110"></canvas>
+                <div id="radar-sweep"></div>
+            </div>
+        </div>
+
+        <div id="center-hud">
+            <div class="hud-row" style="justify-content: space-between;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div class="zh-label">شبكة الطاقة اللاسلكية</div>
+                    <div id="power-grid">
+                        <div class="power-bar"></div><div class="power-bar"></div><div class="power-bar"></div>
+                        <div class="power-bar"></div><div class="power-bar"></div><div class="power-bar"></div>
+                    </div>
+                </div>
+                <div id="selection-profile">
+                    <div id="profile-icon">📡</div>
+                    <div id="profile-name">نظام الرادار جاهز</div>
+                </div>
+            </div>
+
+            <div class="hud-row">
+                <button class="btn-zh-action" id="btn-attack-mode" disabled>⚔️ هجوم</button>
+                <button class="btn-zh-action" id="btn-defend-mode" disabled>🛡️ حراسة</button>
+                <button class="btn-zh-action" id="btn-stop-order" disabled>🛑 إلغاء</button>
+                <button class="btn-zh-action" id="btn-sell-building" style="border-color: #e67e22; color: #e67e22;" disabled>💰 تفكيك بيع</button>
+            </div>
+        </div>
+
+        <div id="build-matrix">
+            <button class="btn-zh-grid" id="btn-spawn-dozer" disabled><span>🚜</span>جرافة<br><span class="cost-tag">$1000</span><div class="build-progress"></div></button>
+            <button class="btn-zh-grid" id="btn-factory" disabled><span>🏭</span>مصنع<br><span class="cost-tag">$600</span></button>
+            <button class="btn-zh-grid" id="btn-oil" disabled><span>🛢️</span>بئر نفط<br><span class="cost-tag">$800</span></button>
+            <button class="btn-zh-grid" id="btn-infantry" disabled><span>🪖</span>مشاة<br><span class="cost-tag">$100</span><div class="build-progress"></div></button>
+            <button class="btn-zh-grid" id="btn-tank" disabled><span>💥</span>دبابة<br><span class="cost-tag">$450</span><div class="build-progress"></div></button>
+            <button class="btn-zh-grid" style="opacity: 0.3;" disabled><span>📡</span>دفاع جوي</button>
+        </div>
+    </div>
+</div>
+
+<script type="importmap"> { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } } </script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// --- إدارة الصوتيات والموسيقى الحربية ---
+const audioListener = new THREE.AudioListener();
+const bgMusic = new THREE.Audio(audioListener);
+const sfxAudio = new THREE.Audio(audioListener);
+const audioLoader = new THREE.AudioLoader();
+
+// مسارات ملفات الصوت (قم بوضع ملفاتك بنفس هذه الأسماء في مجلد المشروع)
+const soundPaths = {
+    music: './sounds/battle_music.mp3',      // موسيقى حماسية خلفية
+    spawn: './sounds/unit_ready.mp3',       // صوت عند جاهزية الوحدة
+    click: './sounds/ui_click.mp3',         // صوت الضغط على الأزرار
+    construction: './sounds/building.mp3',  // صوت جاري البناء
+    explosion: './sounds/explosion.mp3'     // صوت التفكيك والانفجار
+};
+
+function playMusic() {
+    audioLoader.load(soundPaths.music, (buffer) => {
+        bgMusic.setBuffer(buffer);
+        bgMusic.setLoop(true);
+        bgMusic.setVolume(document.getElementById('volume-music').value / 100);
+        bgMusic.play();
+    });
+}
+
+function playSFX(type) {
+    if(soundPaths[type]) {
+        audioLoader.load(soundPaths[type], (buffer) => {
+            sfxAudio.setBuffer(buffer);
+            sfxAudio.setVolume(document.getElementById('volume-sfx').value / 100);
+            sfxAudio.play();
+        });
+    }
+}
+
+// بدء تشغيل الموسيقى مع أول تفاعل للمستخدم مع الشاشة
+window.addEventListener('click', () => { if(!bgMusic.isPlaying) playMusic(); }, { once: true });
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x22301a);
+scene.fog = new THREE.FogExp2(0x22301a, 0.0025);
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0, 65, 55); camera.lookAt(0, 0, 5);
+camera.add(audioListener); // ربط الصوت بالكاميرا
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// --- مستدعي المجسمات ثلاثية الأبعاد (GLTF Loader) ---
+const gltfLoader = new GLTFLoader();
+const loadedModels = { dozer: null, factory: null, oil: null, tank: null, infantry: null };
+
+// مسارات ملفات المجسمات الخارجية ثلاثية الأبعاد للجيش التركي وباقي العناصر
+const modelPaths = {
+    dozer: './models/turkish_dozer.glb',      // مجسم جرافة الجيش التركي
+    factory: './models/war_factory.glb',      // مجسم المصنع الحربي
+    oil: './models/oil_derrick.glb',          // مجسم بئر النفط
+    tank: './models/turkish_altay_tank.glb',  // مجسم دبابة التاي التركية
+    infantry: './models/turkish_soldier.glb'  // مجسم جندي المشاة التركي
+};
+
+// دالة لتحميل المجسمات، وفي حال عدم وجود الملف تستبدل تلقائياً بالمجسم الاحتياطي المدمج
+function loadGameModels(type, path) {
+    gltfLoader.load(path, 
+        (gltf) => { loadedModels[type] = gltf.scene; },
+        undefined,
+        (error) => { console.log(`استخدام المجسم الافتراضي لـ ${type} (لم يتم العثور على ملف خارجي بعد)`); }
+    );
+}
+Object.entries(modelPaths).forEach(([type, path]) => loadGameModels(type, path));
+
+// --- تحكم شاشات الإعدادات والملء الكامل ---
+const fsBtn = document.getElementById('fullscreen-btn');
+fsBtn.onclick = () => {
+    playSFX('click');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => { fsBtn.innerText = "❌"; }).catch(err => console.log(err));
+    } else {
+        document.exitFullscreen().then(() => { fsBtn.innerText = "📺"; });
+    }
+};
+
+const settingsBtn = document.getElementById('settings-btn');
+const settingsMenu = document.getElementById('settings-menu');
+const closeSettingsBtn = document.getElementById('btn-close-settings');
+
+settingsBtn.onclick = () => { playSFX('click'); settingsMenu.style.display = 'flex'; };
+closeSettingsBtn.onclick = () => { settingsMenu.style.display = 'none'; msg("⚙️ تم حفظ تعديلات الغرفة التكتيكية."); playSFX('click'); };
+
+// التحكم بمستوى الصوت من الإعدادات
+document.getElementById('volume-music').oninput = (e) => { bgMusic.setVolume(e.target.value / 100); };
+document.getElementById('volume-sfx').oninput = (e) => { sfxAudio.setVolume(e.target.value / 100); };
+
+// متقاطعات جودة الرسوميات وسرعة اللعبة
+let gameSpeedModifier = 1.0;
+let graphicQualityHigh = true;
+
+document.getElementById('game-speed').oninput = (e) => { gameSpeedModifier = e.target.value / 100; };
+document.getElementById('fx-low').onclick = () => {
+    graphicQualityHigh = false;
+    document.getElementById('fx-low').classList.add('active');
+    document.getElementById('fx-high').classList.remove('active');
+    renderer.shadowMap.enabled = false;
+    scene.fog = null;
+    playSFX('click');
+};
+document.getElementById('fx-high').onclick = () => {
+    graphicQualityHigh = true;
+    document.getElementById('fx-high').classList.add('active');
+    document.getElementById('fx-low').classList.remove('active');
+    renderer.shadowMap.enabled = true;
+    scene.fog = new THREE.FogExp2(0x22301a, 0.0025);
+    playSFX('click');
+};
+
+// --- Lighting ---
+const ambient = new THREE.AmbientLight(0xffffff, 0.7); scene.add(ambient);
+const sunLight = new THREE.DirectionalLight(0xfffaed, 1.3);
+sunLight.position.set(80, 140, 60); sunLight.castShadow = true;
+scene.add(sunLight);
+
+// --- Ground ---
+const canvasSize = 512; const tempCanvas = document.createElement('canvas');
+tempCanvas.width = canvasSize; tempCanvas.height = canvasSize;
+const ctx = tempCanvas.getContext('2d');
+ctx.fillStyle = '#3a4a2b'; ctx.fillRect(0, 0, canvasSize, canvasSize);
+for (let i = 0; i < 400; i++) {
+    ctx.fillStyle = Math.random() > 0.5 ? '#485c35' : '#2d3b20';
+    ctx.beginPath(); ctx.arc(Math.random()*canvasSize, Math.random()*canvasSize, Math.random()*20+5, 0, Math.PI*2); ctx.fill();
+}
+const groundTexture = new THREE.CanvasTexture(tempCanvas);
+groundTexture.wrapS = THREE.RepeatWrapping; groundTexture.wrapT = THREE.RepeatWrapping; groundTexture.repeat.set(15, 15);
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), new THREE.MeshStandardMaterial({ map: groundTexture, roughness: 0.85 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+const grid = new THREE.GridHelper(500, 120, 0x162410, 0x1d3015);
+grid.position.y = 0.02; scene.add(grid);
+
+const moveMarker = new THREE.Mesh(new THREE.RingGeometry(0.1, 1.3, 4), new THREE.MeshBasicMaterial({ color: 0x00ff33, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }));
+moveMarker.rotation.x = -Math.PI / 2; moveMarker.position.y = 0.05; moveMarker.visible = false; scene.add(moveMarker);
+
+const mCanvas = document.getElementById('minimap-canvas'); const mCtx = mCanvas.getContext('2d');
+
+// --- Game Variables ---
+let money = 3000; let selectedObject = null; let buildMode = null; let tacticalActionMode = null; let radarPart = null;
+const dozers = []; const structures = []; const units = []; const smokeParticles = []; const floatingTexts = [];
+const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
+
+const geometries = {
+    dozer: new THREE.BoxGeometry(2.6, 1.5, 3.6),
+    factory: new THREE.BoxGeometry(11, 4.5, 8.5),
+    oil: new THREE.CylinderGeometry(2.5, 3.5, 7, 16),
+    ghost: new THREE.BoxGeometry(10, 0.2, 10)
+};
+
+const buildGhost = new THREE.Mesh(geometries.ghost, new THREE.MeshBasicMaterial({ color: 0x00ff33, transparent: true, opacity: 0.4 }));
+buildGhost.visible = false; scene.add(buildGhost);
+
+function msg(text) {
+    const container = document.getElementById('notification-container');
+    const toast = document.createElement('div'); toast.className = 'toast-msg'; toast.innerText = text;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 30);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 250); }, 2500);
+}
+
+// --- Spawning Logic ---
+function createDozerMesh() {
+    const group = new THREE.Group();
+    if (loadedModels.dozer) {
+        const extModel = loadedModels.dozer.clone();
+        group.add(extModel);
+    } else {
+        const body = new THREE.Mesh(geometries.dozer, new THREE.MeshStandardMaterial({ color: 0xcc7a00 }));
+        body.position.y = 0.75; body.castShadow = true; group.add(body);
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 1.8), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        cabin.position.set(0, 2.0, -0.4); group.add(cabin);
+    }
+    group.userData = { type: 'dozer', targetX: 0, targetZ: 0, isBuilding: false, currentProject: null, radius: 2.2 };
+    return group;
+}
+
+function createHQStructure(x, z) {
+    const bGroup = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.BoxGeometry(12, 5.5, 12), new THREE.MeshStandardMaterial({ color: 0x4d5656 }));
+    base.position.y = 2.75; base.castShadow = base.receiveShadow = true; bGroup.add(base);
+    radarPart = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.5, 0.2), new THREE.MeshStandardMaterial({ color: 0xcc3300 }));
+    radarPart.position.set(4, 9, 4); bGroup.add(radarPart);
+    bGroup.position.set(x, 0, z); scene.add(bGroup);
+    bGroup.userData = { type: 'hq', progress: 100, radius: 7.0 };
+    structures.push(bGroup);
+}
+
+createHQStructure(0, 0);
+const firstDozer = createDozerMesh(); firstDozer.position.set(-15, 0, 15);
+firstDozer.userData.targetX = -15; firstDozer.userData.targetZ = 15;
+scene.add(firstDozer); dozers.push(firstDozer);
+
+function spawnFloatingText(text, position, customColor = '#00ff33') {
+    const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64;
+    const g = canvas.getContext('2d'); g.fillStyle = customColor; g.font = 'bold 28px Courier New'; g.textAlign = 'center'; g.fillText(text, 64, 40);
+    const tex = new THREE.CanvasTexture(canvas); const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    const sprite = new THREE.Sprite(mat); sprite.position.copy(position); sprite.position.y += 4; sprite.scale.set(6, 3, 1);
+    scene.add(sprite); floatingTexts.push({ sprite: sprite, age: 0 });
+}
+
+function createSmokeParticle(pos, heightOffset = 4, customColor = 0x556655) {
+    if(!graphicQualityHigh) return; 
+    const pMat = new THREE.MeshBasicMaterial({ color: customColor, transparent: true, opacity: 0.4 });
+    const pMesh = new THREE.Mesh(new THREE.SphereGeometry(Math.random() * 0.4 + 0.2, 8, 8), pMat);
+    pMesh.position.set(pos.x + (Math.random()-0.5)*2, pos.y + heightOffset, pos.z + (Math.random()-0.5)*2);
+    scene.add(pMesh);
+    smokeParticles.push({ mesh: pMesh, vx: (Math.random() - 0.5) * 0.03, vy: Math.random() * 0.04 + 0.05, vz: (Math.random() - 0.5) * 0.03, life: 1.0 });
+}
+
+// --- Interaction ---
+let isDragging = false, prevX, prevY;
+window.addEventListener('touchstart', (e) => {
+    if(e.touches[0].clientY > window.innerHeight - 140 || settingsMenu.style.display === 'flex') return;
+    isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
+    mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+    handleInteraction();
+});
+
+window.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    if (!buildMode && !selectedObject) {
+        camera.position.x -= (e.touches[0].clientX - prevX) * 0.14; camera.position.z -= (e.touches[0].clientY - prevY) * 0.14;
+    } else if (buildMode) {
+        mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObject(ground);
+        if(intersects.length > 0) buildGhost.position.set(Math.round(intersects[0].point.x/2)*2, 0.1, Math.round(intersects[0].point.z/2)*2);
+    }
+    prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
+});
+window.addEventListener('touchend', () => { isDragging = false; });
+
+function checkCollisions(unitObj) {
+    structures.forEach(struct => {
+        if(struct.userData.progress >= 100 && !struct.userData.isDemolishing) {
+            const dx = unitObj.position.x - struct.position.x; const dz = unitObj.position.z - struct.position.z;
+            const dist = Math.sqrt(dx*dx + dz*dz); const minDist = unitObj.userData.radius + struct.userData.radius;
+            if(dist < minDist) {
+                const overlap = minDist - dist; unitObj.position.x += (dx / dist) * overlap; unitObj.position.z += (dz / dist) * overlap;
+                unitObj.userData.targetX = unitObj.position.x; unitObj.userData.targetZ = unitObj.position.z;
+            }
+        }
+    });
+}
+
+function showWaypoint(x, z, color = 0x00ff33) {
+    moveMarker.position.set(x, 0.06, z); moveMarker.scale.set(1, 1, 1);
+    moveMarker.material.color.setHex(color); moveMarker.material.opacity = 0.9; moveMarker.visible = true;
+}
+
+function handleInteraction() {
+    raycaster.setFromCamera(mouse, camera);
+    const allObjects = [...dozers, ...structures, ...units];
+
+    if (tacticalActionMode && selectedObject) {
+        const intersects = raycaster.intersectObjects(allObjects, true);
+        const groundIntersects = raycaster.intersectObject(ground);
+        if (tacticalActionMode === 'attack' && intersects.length > 0) {
+            let clickedTarget = intersects[0].object;
+            while(clickedTarget.parent && clickedTarget.parent !== scene) clickedTarget = clickedTarget.parent;
+            selectedObject.userData.targetX = clickedTarget.position.x; selectedObject.userData.targetZ = clickedTarget.position.z;
+            showWaypoint(clickedTarget.position.x, clickedTarget.position.z, 0xff3300);
+            msg(`⚔️ تم توجيه أمر الاشتباك المباشر للمجموعة!`);
+            playSFX('click');
+        } else if (tacticalActionMode === 'defend' && groundIntersects.length > 0) {
+            const pt = groundIntersects[0].point; selectedObject.userData.targetX = pt.x; selectedObject.userData.targetZ = pt.z;
+            showWaypoint(pt.x, pt.z, 0x00ffbb); msg(`🛡️ تثبيت حراسة المنطقة المستهدفة.`);
+            playSFX('click');
+        }
+        tacticalActionMode = null;
+        document.getElementById('btn-attack-mode').classList.remove('active');
+        document.getElementById('btn-defend-mode').classList.remove('active');
+        return;
+    }
+
+    if (buildMode && selectedObject && selectedObject.userData.type === 'dozer') {
+        const intersects = raycaster.intersectObject(ground);
+        if (intersects.length > 0) {
+            const loc = intersects[0].point; const tx = Math.round(loc.x/2)*2; const tz = Math.round(loc.z/2)*2;
+            selectedObject.userData.targetX = tx; selectedObject.userData.targetZ = tz;
+            selectedObject.userData.isBuilding = true; selectedObject.userData.buildingType = buildMode;
+            showWaypoint(tx, tz); msg("🚜 الجرافة تتوجه للبدء في صب الخرسانة..."); cancelSelection();
+            playSFX('construction');
+        }
+        return;
+    }
+
+    if (selectedObject && ['tank', 'infantry', 'dozer'].includes(selectedObject.userData.type)) {
+        const intersects = raycaster.intersectObject(ground);
+        if (intersects.length > 0 && !buildMode) {
+            const loc = intersects[0].point; selectedObject.userData.targetX = loc.x; selectedObject.userData.targetZ = loc.z;
+            showWaypoint(loc.x, loc.z); msg("الوحدات في طريقها للإحداثيات المحددة.");
+            playSFX('click');
+            if(selectedObject.userData.type !== 'dozer') cancelSelection();
+            return;
+        }
+    }
+
+    const intersects = raycaster.intersectObjects(allObjects, true);
+    if (intersects.length > 0) {
+        let rootObj = intersects[0].object;
+        while(rootObj.parent && rootObj.parent !== scene) rootObj = rootObj.parent;
+        if(rootObj.userData.isDemolishing) { cancelSelection(); return; }
+
+        selectedObject = rootObj; updateProfileUI(selectedObject.userData.type);
+        playSFX('click');
+        
+        document.getElementById('btn-spawn-dozer').disabled = (selectedObject.userData.type !== 'hq');
+        document.getElementById('btn-factory').disabled = (selectedObject.userData.type !== 'dozer' || selectedObject.userData.currentProject != null);
+        document.getElementById('btn-oil').disabled = (selectedObject.userData.type !== 'dozer' || selectedObject.userData.currentProject != null);
+        
+        const isCombat = ['tank', 'infantry'].includes(selectedObject.userData.type);
+        document.getElementById('btn-attack-mode').disabled = !isCombat;
+        document.getElementById('btn-defend-mode').disabled = !isCombat;
+        document.getElementById('btn-stop-order').disabled = !['dozer', 'tank', 'infantry'].includes(selectedObject.userData.type);
+        
+        const isReadyFactory = (selectedObject.userData.type === 'factory' && selectedObject.userData.progress >= 100);
+        document.getElementById('btn-infantry').disabled = !isReadyFactory;
+        document.getElementById('btn-tank').disabled = !isReadyFactory;
+
+        const canSell = ['factory', 'oil'].includes(selectedObject.userData.type) && selectedObject.userData.progress >= 100;
+        document.getElementById('btn-sell-building').disabled = !canSell;
+        return;
+    }
+    cancelSelection();
+}
+
+function updateProfileUI(type) {
+    const iconEl = document.getElementById('profile-icon'); const nameEl = document.getElementById('profile-name');
+    switch(type) {
+        case 'hq': iconEl.innerText = "🏢"; nameEl.innerText = "مركز القيادة الكلي"; break;
+        case 'dozer': iconEl.innerText = "🚜"; nameEl.innerText = "جرافة التشييد التركية"; break;
+        case 'factory': iconEl.innerText = "🏭"; nameEl.innerText = "المصنع الحربي للآليات"; break;
+        case 'oil': iconEl.innerText = "🛢️"; nameEl.innerText = "بئر بترول الإمداد المالي"; break;
+        case 'tank': iconEl.innerText = "💥"; nameEl.innerText = "دبابة ألطاي التركية"; break;
+        case 'infantry': iconEl.innerText = "🪖"; nameEl.innerText = "قوات الكوماندوز التركية"; break;
+        default: iconEl.innerText = "📡"; nameEl.innerText = "نظام الرادار جاهز";
+    }
+}
+
+document.getElementById('btn-attack-mode').onclick = () => { tacticalActionMode = 'attack'; msg("⚔️ انقر لتحديد الهدف المعادي."); document.getElementById('btn-attack-mode').classList.add('active'); playSFX('click'); };
+document.getElementById('btn-defend-mode').onclick = () => { tacticalActionMode = 'defend'; msg("🛡️ حدد موقع تمركز الحراسة."); document.getElementById('btn-defend-mode').classList.add('active'); playSFX('click'); };
+
+document.getElementById('btn-sell-building').onclick = () => {
+    if (!selectedObject) return;
+    const type = selectedObject.userData.type;
+    let refund = type === 'factory' ? 300 : 400; money += refund; updateUI();
+    spawnFloatingText(`+$${refund}`, selectedObject.position, '#cc7a00');
+    selectedObject.userData.isDemolishing = true; cancelSelection();
+    playSFX('explosion');
+};
+
+document.getElementById('btn-stop-order').onclick = () => {
+    if (!selectedObject) return;
+    selectedObject.userData.targetX = selectedObject.position.x; selectedObject.userData.targetZ = selectedObject.position.z;
+    if (selectedObject.userData.type === 'dozer' && selectedObject.userData.currentProject) {
+        scene.remove(selectedObject.userData.currentProject); structures.splice(structures.indexOf(selectedObject.userData.currentProject), 1);
+        selectedObject.userData.currentProject = null; money += 300; updateUI();
+    }
+    moveMarker.visible = false; cancelSelection(); playSFX('click');
+};
+
+function triggerProductionTimer(btnId, duration, onComplete, factoryObj) {
+    const btn = document.getElementById(btnId); const progressEl = btn.querySelector('.build-progress');
+    btn.disabled = true; let elapsed = 0;
+    if(factoryObj) { factoryObj.userData.isProducing = true; factoryObj.userData.doorTargetY = -1.8; }
+
+    const interval = setInterval(() => {
+        elapsed += 0.1 * gameSpeedModifier; let pct = (elapsed / duration) * 100; progressEl.style.width = `${pct}%`;
+        if (elapsed >= duration) {
+            clearInterval(interval); progressEl.style.width = '0%'; btn.disabled = false;
+            if(factoryObj) { factoryObj.userData.isProducing = false; factoryObj.userData.doorTargetY = 0.8; }
+            onComplete();
+            playSFX('spawn');
+        }
+    }, 100);
+}
+
+document.getElementById('btn-spawn-dozer').onclick = () => {
+    if (money < 1000) return; money -= 1000; updateUI(); playSFX('click');
+    triggerProductionTimer('btn-spawn-dozer', 4.0, () => {
+        const dMesh = createDozerMesh(); dMesh.position.set(0, 0, 9);
+        dMesh.userData.targetX = (Math.random() * 12) - 6; dMesh.userData.targetZ = 15;
+        scene.add(dMesh); dozers.push(dMesh); msg("🚜 تم تدشين جرافة صيانة وبناء عسكرية جديدة.");
+    }, null);
+};
+
+document.getElementById('btn-infantry').onclick = () => {
+    if (money < 100 || !selectedObject) return; money -= 100; updateUI(); playSFX('click');
+    const fact = selectedObject;
+    triggerProductionTimer('btn-infantry', 3.0, () => {
+        if(fact.userData.isDemolishing) return;
+        const uGroup = new THREE.Group();
+        if (loadedModels.infantry) {
+            uGroup.add(loadedModels.infantry.clone());
+        } else {
+            const uMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.8), new THREE.MeshStandardMaterial({ color: 0x11aa22 }));
+            uMesh.position.y = 0.9; uGroup.add(uMesh);
+        }
+        uGroup.position.set(fact.position.x, 0, fact.position.z + 5.5);
+        uGroup.userData = { type: 'infantry', targetX: uGroup.position.x, targetZ: uGroup.position.z + 4, radius: 1.0 };
+        scene.add(uGroup); units.push(uGroup); msg("🪖 تم إخراج فرقة مشاة تركية من المصنع.");
+    }, fact);
+};
+
+document.getElementById('btn-tank').onclick = () => {
+    if (money < 450 || !selectedObject) return; money -= 450; updateUI(); playSFX('click');
+    const fact = selectedObject;
+    triggerProductionTimer('btn-tank', 6.0, () => {
+        if(fact.userData.isDemolishing) return;
+        const tGroup = new THREE.Group();
+        if (loadedModels.tank) {
+            tGroup.add(loadedModels.tank.clone());
+        } else {
+            const base = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.9, 3.6), new THREE.MeshStandardMaterial({ color: 0x1f4024 })); base.position.y = 0.45; tGroup.add(base);
+            const turret = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 1.5), new THREE.MeshStandardMaterial({ color: 0x0a140d })); turret.position.set(0, 1.15, -0.2); tGroup.add(turret);
+            const cannon = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.2), new THREE.MeshStandardMaterial({ color: 0x556655 })); cannon.rotation.x = Math.PI / 2; cannon.position.set(0, 1.15, 1.2); tGroup.add(cannon);
+        }
+        tGroup.position.set(fact.position.x, 0, fact.position.z + 5.5);
+        tGroup.userData = { type: 'tank', targetX: tGroup.position.x, targetZ: tGroup.position.z + 4, radius: 2.0 };
+        scene.add(tGroup); units.push(tGroup); msg("💥 الدبابة الهجومية ألطاي جاهزة للقتال.");
+    }, fact);
+};
+
+function startBuildMode(type) {
+    let cost = type === 'factory' ? 600 : 800; if (money < cost) { msg("عفواً، الموارد غير كافية!"); return; }
+    buildMode = type; buildGhost.visible = true; playSFX('click');
+}
+document.getElementById('btn-factory').onclick = () => startBuildMode('factory');
+document.getElementById('btn-oil').onclick = () => startBuildMode('oil');
+
+function startConstructionUnderground(type, x, z) {
+    money -= (type === 'factory' ? 600 : 800); updateUI();
+    const bGroup = new THREE.Group();
+    
+    if (loadedModels[type]) {
+        bGroup.add(loadedModels[type].clone());
+        bGroup.userData = { type: type, progress: 0, radius: type === 'factory' ? 6.5 : 4.5, isDemolishing: false, lastIncomeTime: 0 };
+    } else {
+        if (type === 'factory') {
+            const factoryBody = new THREE.Mesh(geometries.factory, new THREE.MeshStandardMaterial({ color: 0x5e6b58 })); factoryBody.position.y = 2.25; bGroup.add(factoryBody);
+            const chimney = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 4), new THREE.MeshStandardMaterial({ color: 0x1a2118 })); chimney.position.set(-3.5, 5, -2); bGroup.add(chimney);
+            const door = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.4, 0.2), new THREE.MeshStandardMaterial({ color: 0x111610 })); door.position.set(0, 0.8, 4.3); bGroup.add(door);
+            bGroup.userData = { type: type, progress: 0, radius: 6.5, isProducing: false, doorTargetY: 0.8, doorMesh: door, isDemolishing: false };
+        } else {
+            const derrickBody = new THREE.Mesh(geometries.oil, new THREE.MeshStandardMaterial({ color: 0x1f2620 })); derrickBody.position.y = 3.5; bGroup.add(derrickBody);
+            const pumpRig = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 5), new THREE.MeshStandardMaterial({ color: 0x475449 })); pumpRig.position.set(0, 7, 0); bGroup.add(pumpRig);
+            bGroup.userData = { type: type, progress: 0, radius: 4.5, lastIncomeTime: 0, isDemolishing: false };
+        }
+    }
+    bGroup.position.set(x, -7, z); scene.add(bGroup); structures.push(bGroup); return bGroup;
+}
+
+function cancelSelection() {
+    selectedObject = null; buildMode = null; tacticalActionMode = null; buildGhost.visible = false; updateProfileUI('none');
+    document.getElementById('btn-spawn-dozer').disabled = true; document.getElementById('btn-factory').disabled = true;
+    document.getElementById('btn-oil').disabled = true; document.getElementById('btn-stop-order').disabled = true;
+    document.getElementById('btn-attack-mode').disabled = true; document.getElementById('btn-defend-mode').disabled = true;
+    document.getElementById('btn-infantry').disabled = true; document.getElementById('btn-tank').disabled = true;
+    document.getElementById('btn-sell-building').disabled = true;
+}
+
+function updateUI() { document.getElementById('money-txt').innerText = money; }
+
+function drawMinimap() {
+    mCtx.clearRect(0, 0, 110, 110); const mapScale = 0.5; const cx = 55, cy = 55;
+    mCtx.fillStyle = '#ffffff'; mCtx.fillRect(cx + camera.position.x * mapScale - 1, cy + camera.position.z * mapScale - 1, 3, 3);
+    structures.forEach(s => { 
+        if(s.userData.isDemolishing) return;
+        mCtx.fillStyle = s.userData.type === 'hq' ? '#00ff33' : (s.userData.type === 'factory' ? '#ffaa00' : '#00aaff'); mCtx.fillRect(cx + s.position.x * mapScale - 2, cy + s.position.z * mapScale - 2, 5, 5); 
+    });
+    dozers.forEach(d => { mCtx.fillStyle = '#ffff00'; mCtx.fillRect(cx + d.position.x * mapScale - 1.5, cy + d.position.z * mapScale - 1.5, 3, 3); });
+    units.forEach(u => { mCtx.fillStyle = u.userData.type === 'tank' ? '#ff3333' : '#00ff33'; mCtx.beginPath(); mCtx.arc(cx + u.position.x * mapScale, cy + u.position.z * mapScale, 1.5, 0, Math.PI*2); mCtx.fill(); });
+}
+
+// --- Game Loop ---
+const clock = new THREE.Clock();
+function animate() {
+    requestAnimationFrame(animate); const time = clock.getElapsedTime();
+    const speedFactor = 0.16 * gameSpeedModifier;
+    const unitSpeedFactor = 0.2 * gameSpeedModifier;
+
+    if (radarPart) radarPart.rotation.y += 0.04 * gameSpeedModifier;
+    if (moveMarker.visible) { moveMarker.scale.x += 0.02; moveMarker.scale.y += 0.02; moveMarker.material.opacity -= 0.03; if (moveMarker.material.opacity <= 0) moveMarker.visible = false; }
+
+    dozers.forEach(dozer => {
+        const dx = dozer.userData.targetX - dozer.position.x; const dz = dozer.userData.targetZ - dozer.position.z; const dist = Math.sqrt(dx*dx + dz*dz);
+        if (dist > 0.6) { dozer.rotation.y = Math.atan2(dx, dz); dozer.position.x += (dx / dist) * speedFactor; dozer.position.z += (dz / dist) * speedFactor; }
+        else if (dozer.userData.isBuilding) { dozer.userData.isBuilding = false; dozer.userData.currentProject = startConstructionUnderground(dozer.userData.buildingType, dozer.position.x, dozer.position.z); }
+        checkCollisions(dozer);
+        if (dozer.userData.currentProject) {
+            const proj = dozer.userData.currentProject;
+            if (proj.userData.progress < 100) { proj.userData.progress += 0.5 * gameSpeedModifier; proj.position.y = -7 + (proj.userData.progress / 100) * 7; } 
+            else { proj.userData.progress = 100; dozer.userData.currentProject = null; msg(`🏭 تم الانتهاء من الأعمال الإنشائية في الموقع الهيكلي.`); }
+        }
+    });
+
+    for (let i = structures.length - 1; i >= 0; i--) {
+        const struct = structures[i];
+        if (struct.userData.isDemolishing) {
+            struct.position.y -= 0.08 * gameSpeedModifier;
+            if (Math.random() < 0.5) createSmokeParticle(struct.position, 1, 0x1c211a);
+            if (struct.position.y <= -7) { scene.remove(struct); structures.splice(i, 1); }
+            continue;
+        }
+        if (struct.userData.type === 'oil' && struct.userData.progress >= 100) {
+            if(struct.children[1] && !loadedModels.oil) struct.children[1].rotation.z = Math.sin(time * 4 * gameSpeedModifier) * 0.2;
+            if (Math.random() < 0.1) createSmokeParticle(struct.position, 7.5);
+            if (time - struct.userData.lastIncomeTime > 3.0 / gameSpeedModifier) {
+                struct.userData.lastIncomeTime = time; money += 50; updateUI();
+                spawnFloatingText("+$50", struct.position, '#00ff33');
+            }
+        }
+        if (struct.userData.type === 'factory' && struct.userData.progress >= 100) {
+            if(struct.userData.doorMesh) {
+                const door = struct.userData.doorMesh; door.position.y += (struct.userData.doorTargetY - door.position.y) * 0.1 * gameSpeedModifier;
+            }
+            if (struct.userData.isProducing && Math.random() < 0.25) {
+                const chimneyPos = new THREE.Vector3(-3.5, 5, -2).add(struct.position); createSmokeParticle(chimneyPos, 1.5);
+            }
+        }
+    }
+
+    for (let i = smokeParticles.length - 1; i >= 0; i--) {
+        const p = smokeParticles[i]; p.mesh.position.x += p.vx; p.mesh.position.y += p.vy; p.mesh.position.z += p.vz; p.life -= 0.015; p.mesh.material.opacity = p.life * 0.4;
+        if (p.life <= 0) { scene.remove(p.mesh); smokeParticles.splice(i, 1); }
+    }
+
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const t = floatingTexts[i]; t.sprite.position.y += 0.06; t.age += 0.02;
+        if (t.age > 1.0) { scene.remove(t.sprite); floatingTexts.splice(i, 1); }
+    }
+
+    units.forEach(unit => {
+        const dx = unit.userData.targetX - unit.position.x; const dz = unit.userData.targetZ - unit.position.z; const dist = Math.sqrt(dx*dx + dz*dz);
+        if (dist > 0.5) { unit.rotation.y = Math.atan2(dx, dz); unit.position.x += (dx / dist) * unitSpeedFactor; unit.position.z += (dz / dist) * unitSpeedFactor; }
+        checkCollisions(unit);
+    });
+
+    drawMinimap(); renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+</script>
+</body>
+</html>
