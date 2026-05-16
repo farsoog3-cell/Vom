@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Morken Generals: Zero Hour Modded</title>
+    <style>
+        :root { 
+            --zh-green: #00ff33;
+            --zh-dark-green: #003300;
+            --zh-bg: rgba(6, 18, 8, 0.95);
+            --zh-border: #11aa22;
+        }
+        body { margin: 0; overflow: hidden; background: #050a05; font-family: 'Courier New', Courier, monospace; touch-action: none; user-select: none; }
+        
+        #ui-layer { position: absolute; inset: 0; pointer-events: none; z-index: 100; }
+        .pointer-all { pointer-events: all; }
+
+        #rotate-alert {
+            position: fixed; inset: 0; background: #000; z-index: 999;
+            display: none; flex-direction: column; align-items: center; justify-content: center; color: var(--zh-green); text-align: center;
+        }
+        @media (orientation: portrait) { #rotate-alert { display: flex; } }
+
+        /* شريط واجهة التحكم السفلي */
+        #command-bar { 
+            position: absolute; bottom: 0; left: 0; right: 0; height: 140px;
+            background: var(--zh-bg); border-top: 3px solid var(--zh-border);
+            display: grid; grid-template-columns: 160px 1fr 240px; padding: 0;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.8); box-sizing: border-box;
+        }
+
+        #radar-section { border-right: 2px solid var(--zh-border); background: #020803; position: relative; display: flex; align-items: center; justify-content: center; }
+        #mini-map { width: 110px; height: 110px; background: #001100; border: 2px solid var(--zh-green); position: relative; overflow: hidden; box-shadow: inset 0 0 15px rgba(0,255,51,0.3); }
+        #minimap-canvas { width: 100%; height: 100%; background: #030f04; }
+        
+        #radar-sweep { position: absolute; inset: 0; background: linear-gradient(30deg, rgba(0,255,51,0) 40%, rgba(0,255,51,0.15) 50%, rgba(0,255,51,0) 60%); animation: sweep 3s linear infinite; pointer-events: none; }
+        @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        #center-hud { padding: 10px; display: flex; flex-direction: column; justify-content: space-between; border-right: 2px solid var(--zh-border); }
+        .hud-row { display: flex; gap: 10px; align-items: center; }
+        
+        #power-grid { display: flex; gap: 2px; background: #001100; padding: 3px; border: 1px solid var(--zh-border); width: 120px; height: 12px; }
+        .power-bar { flex: 1; background: var(--zh-green); opacity: 0.8; }
+        .zh-label { color: var(--zh-green); font-size: 11px; font-weight: bold; text-shadow: 0 0 4px rgba(0,255,51,0.5); }
+
+        .btn-zh-action { background: #002200; border: 1px solid var(--zh-green); color: var(--zh-green); padding: 4px 8px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-zh-action:hover:not(:disabled), .btn-zh-action.active { background: var(--zh-green); color: #000; }
+        .btn-zh-action:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        #selection-profile { background: rgba(0, 34, 0, 0.6); border: 1px solid var(--zh-green); padding: 5px 15px; display: flex; align-items: center; gap: 10px; min-width: 180px; height: 45px; }
+        #profile-icon { font-size: 22px; }
+        #profile-name { color: #fff; font-size: 11px; font-weight: bold; }
+
+        #build-matrix { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 4px; padding: 6px; background: #030d04; }
+        .btn-zh-grid { background: rgba(0, 40, 0, 0.7); border: 1px solid #11aa22; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; position: relative; overflow: hidden; height: 58px; }
+        .btn-zh-grid:hover:not(:disabled), .btn-zh-grid.active { border-color: var(--zh-green); background: rgba(0,255,51,0.15); color: var(--zh-green); }
+        .btn-zh-grid span { font-size: 16px; margin-bottom: 1px; }
+        .btn-zh-grid:disabled { opacity: 0.15; cursor: not-allowed; border-color: #002200; }
+        .btn-zh-grid .cost-tag { color: var(--zh-green); font-size: 8px; font-family: Arial, sans-serif; }
+        .build-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--zh-green); width: 0%; }
+
+        #money-panel { position: absolute; top: 15px; right: 20px; color: var(--zh-green); background: var(--zh-bg); padding: 5px 15px; border: 1px solid var(--zh-border); font-size: 14px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px; }
+        
+        /* أزرار الزوايا العلوية اليسارية */
+        .top-btn { position: absolute; top: 15px; background: var(--zh-bg); color: var(--zh-green); border: 1px solid var(--zh-border); width: 36px; height: 36px; cursor: pointer; pointer-events: all; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .top-btn:hover { background: rgba(0,255,51,0.1); }
+        #fullscreen-btn { left: 15px; }
+        #settings-btn { left: 60px; }
+
+        /* نافذة الإعدادات العسكرية الكلاسيكية */
+        #settings-menu {
+            position: absolute; inset: 0; margin: auto; width: 340px; height: 340px;
+            background: var(--zh-bg); border: 2px solid var(--zh-green);
+            box-shadow: 0 0 30px rgba(0, 255, 51, 0.3); z-index: 300;
+            display: none; flex-direction: column; padding: 15px; box-sizing: border-box;
+        }
+        .settings-header { color: var(--zh-green); font-size: 16px; font-weight: bold; border-bottom: 1px solid var(--zh-border); padding-bottom: 5px; margin-bottom: 15px; text-align: center; }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: #fff; font-size: 12px; }
+        .settings-row input[type="range"] { accent-color: var(--zh-green); width: 140px; cursor: pointer; }
+        .btn-group { display: flex; gap: 5px; }
+        .btn-setting-option { background: #002200; border: 1px solid var(--zh-border); color: #fff; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+        .btn-setting-option.active { background: var(--zh-green); color: #000; font-weight: bold; }
+        .btn-close-settings { background: #550000; border: 1px solid #ff3333; color: #fff; padding: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-top: auto; }
+        .btn-close-settings:hover { background: #880000; }
+
+        #notification-container { position: absolute; top: 70px; left: 15px; width: 280px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 200; }
+        .toast-msg { background: var(--zh-bg); color: #fff; border-right: 4px solid var(--zh-green); padding: 8px 12px; font-size: 11px; font-weight: bold; text-align: right; box-shadow: 0 4px 10px rgba(0,0,0,0.5); opacity: 0; transform: translateY(-10px); transition: all 0.2s ease; }
+        .toast-msg.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<div id="rotate-alert">🔄 Please Rotate Your Device for Battle Command</div>
+
+<div id="ui-layer">
+    <div id="money-panel">💵 <span id="money-txt">3000</span></div>
+    
+    <button id="fullscreen-btn" class="top-btn pointer-all" title="ملء الشاشة">📺</button>
+    <button id="settings-btn" class="top-btn pointer-all" title="الإعدادات">⚙️</button>
+    
+    <div id="notification-container"></div>
+
+    <!-- نافذة الإعدادات -->
+    <div id="settings-menu" class="pointer-all">
+        <div class="settings-header">💻 خيارات الجنرال التكتيكية</div>
+        
+        <div class="settings-row">
+            <span>مستوى الموسيقى:</span>
+            <input type="range" id="volume-music" min="0" max="100" value="70">
+        </div>
+        <div class="settings-row">
+            <span>المؤثرات الصوتية:</span>
+            <input type="range" id="volume-sfx" min="0" max="100" value="85">
+        </div>
+        <div class="settings-row">
+            <span>نمط الموسيقى:</span>
+            <div class="btn-group">
+                <button class="btn-setting-option active" id="track-normal">عادي</button>
+                <button class="btn-setting-option" id="track-hype">حماسي (خماسي)</button>
+            </div>
+        </div>
+        <div class="settings-row">
+            <span>سرعة اللعبة (Game Speed):</span>
+            <input type="range" id="game-speed" min="50" max="150" value="100">
+        </div>
+        <div class="settings-row">
+            <span>الجودة الرسومية:</span>
+            <div class="btn-group">
+                <button class="btn-setting-option" id="fx-low">منخفضة</button>
+                <button class="btn-setting-option active" id="fx-high">عالية</button>
+            </div>
+        </div>
+        
+        <button class="btn-close-settings" id="btn-close-settings">← العودة لأرض المعركة</button>
+    </div>
+
+    <!-- شريط التحكم السفلي الكامل -->
+    <div id="command-bar" class="pointer-all">
+        <div id="radar-section">
+            <div id="mini-map">
+                <canvas id="minimap-canvas" width="110" height="110"></canvas>
+                <div id="radar-sweep"></div>
+            </div>
+        </div>
+
+        <div id="center-hud">
+            <div class="hud-row" style="justify-content: space-between;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <div class="zh-label">شبكة الطاقة اللاسلكية</div>
+                    <div id="power-grid">
+                        <div class="power-bar"></div><div class="power-bar"></div><div class="power-bar"></div>
+                        <div class="power-bar"></div><div class="power-bar"></div><div class="power-bar"></div>
+                    </div>
+                </div>
+                <div id="selection-profile">
+                    <div id="profile-icon">📡</div>
+                    <div id="profile-name">نظام الرادار جاهز</div>
+                </div>
+            </div>
+
+            <div class="hud-row">
+                <button class="btn-zh-action" id="btn-attack-mode" disabled>⚔️ هجوم</button>
+                <button class="btn-zh-action" id="btn-defend-mode" disabled>🛡️ حراسة</button>
+                <button class="btn-zh-action" id="btn-stop-order" disabled>🛑 إلغاء</button>
+                <button class="btn-zh-action" id="btn-sell-building" style="border-color: #e67e22; color: #e67e22;" disabled>💰 تفكيك بيع</button>
+            </div>
+        </div>
+
+        <div id="build-matrix">
+            <button class="btn-zh-grid" id="btn-spawn-dozer" disabled><span>🚜</span>جرافة<br><span class="cost-tag">$1000</span><div class="build-progress"></div></button>
+            <button class="btn-zh-grid" id="btn-factory" disabled><span>🏭</span>مصنع<br><span class="cost-tag">$600</span></button>
+            <button class="btn-zh-grid" id="btn-oil" disabled><span>🛢️</span>بئر نفط<br><span class="cost-tag">$800</span></button>
+            <button class="btn-zh-grid" id="btn-infantry" disabled><span>🪖</span>مشاة<br><span class="cost-tag">$100</span><div class="build-progress"></div></button>
+            <button class="btn-zh-grid" id="btn-tank" disabled><span>💥</span>دبابة<br><span class="cost-tag">$450</span><div class="build-progress"></div></button>
+            <button class="btn-zh-grid" style="opacity: 0.3;" disabled><span>📡</span>دفاع جوي</button>
+        </div>
+    </div>
+</div>
+
+<script type="importmap"> { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } } </script>
+<!-- استدعاء ملف الـ Logic الرئيسي الخارجي المحرك للعبة -->
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
