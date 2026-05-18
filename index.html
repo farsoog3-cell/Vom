@@ -96,13 +96,11 @@
 <div id="ui-layer">
     <div id="money-panel">💵 <span id="money-txt">3000</span></div>
     
-    <!-- الأزرار العلوية -->
     <button id="fullscreen-btn" class="top-btn pointer-all" title="ملء الشاشة">📺</button>
     <button id="settings-btn" class="top-btn pointer-all" title="الإعدادات">⚙️</button>
     
     <div id="notification-container"></div>
 
-    <!-- نافذة الإعدادات المصممة بنمط القوائم العسكرية -->
     <div id="settings-menu" class="pointer-all">
         <div class="settings-header">💻 خيارات الجنرال التكتيكية</div>
         
@@ -129,7 +127,6 @@
         <button class="btn-close-settings" id="btn-close-settings">← العودة لأرض المعركة</button>
     </div>
 
-    <!-- شريط التحكم السفلي الكامل بنمط Zero Hour -->
     <div id="command-bar" class="pointer-all">
         <div id="radar-section">
             <div id="mini-map">
@@ -184,13 +181,12 @@ const bgMusic = new THREE.Audio(audioListener);
 const sfxAudio = new THREE.Audio(audioListener);
 const audioLoader = new THREE.AudioLoader();
 
-// مسارات ملفات الصوت (قم بوضع ملفاتك بنفس هذه الأسماء في مجلد المشروع)
 const soundPaths = {
-    music: './sounds/battle_music.mp3',      // موسيقى حماسية خلفية
-    spawn: './sounds/unit_ready.mp3',       // صوت عند جاهزية الوحدة
-    click: './sounds/ui_click.mp3',         // صوت الضغط على الأزرار
-    construction: './sounds/building.mp3',  // صوت جاري البناء
-    explosion: './sounds/explosion.mp3'     // صوت التفكيك والانفجار
+    music: './sounds/battle_music.mp3',      
+    spawn: './sounds/unit_ready.mp3',       
+    click: './sounds/ui_click.mp3',         
+    construction: './sounds/building.mp3',  
+    explosion: './sounds/explosion.mp3'     
 };
 
 function playMusic() {
@@ -212,7 +208,6 @@ function playSFX(type) {
     }
 }
 
-// بدء تشغيل الموسيقى مع أول تفاعل للمستخدم مع الشاشة
 window.addEventListener('click', () => { if(!bgMusic.isPlaying) playMusic(); }, { once: true });
 
 const scene = new THREE.Scene();
@@ -221,7 +216,7 @@ scene.fog = new THREE.FogExp2(0x22301a, 0.0025);
 
 const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 0.1, 1000);
 camera.position.set(0, 65, 55); camera.lookAt(0, 0, 5);
-camera.add(audioListener); // ربط الصوت بالكاميرا
+camera.add(audioListener); 
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -230,23 +225,36 @@ document.body.appendChild(renderer.domElement);
 
 // --- مستدعي المجسمات ثلاثية الأبعاد (GLTF Loader) ---
 const gltfLoader = new GLTFLoader();
-const loadedModels = { dozer: null, factory: null, oil: null, tank: null, infantry: null };
+const loadedModels = { hq: null, dozer: null, factory: null, oil: null, tank: null, infantry: null };
 
-// مسارات ملفات المجسمات الخارجية ثلاثية الأبعاد للجيش التركي وباقي العناصر
+// ربط المسارات الرسمية لملفات الـ GLB الحقيقية بما فيها مركز القيادة الرئيسي
 const modelPaths = {
-    dozer: './models/turkish_dozer.glb',      // مجسم جرافة الجيش التركي
-    factory: './models/war_factory.glb',      // مجسم المصنع الحربي
-    oil: './models/oil_derrick.glb',          // مجسم بئر النفط
-    tank: './models/turkish_altay_tank.glb',  // مجسم دبابة التاي التركية
-    infantry: './models/turkish_soldier.glb'  // مجسم جندي المشاة التركي
+    hq: './models/command_center.glb',        // مجسم مركز القيادة الرئيسي (الذي تخرج منه الجرافة)
+    dozer: './models/turkish_dozer.glb',      
+    factory: './models/war_factory.glb',      
+    oil: './models/oil_derrick.glb',          
+    tank: './models/turkish_altay_tank.glb',  
+    infantry: './models/turkish_soldier.glb'  
 };
 
-// دالة لتحميل المجسمات، وفي حال عدم وجود الملف تستبدل تلقائياً بالمجسم الاحتياطي المدمج
+// دالة ذكية تقوم بتحميل الملف من المجلد، وإذا نجحت تحفظه لتعويض الشكل الافتراضي فوراً
 function loadGameModels(type, path) {
     gltfLoader.load(path, 
-        (gltf) => { loadedModels[type] = gltf.scene; },
+        (gltf) => { 
+            loadedModels[type] = gltf.scene; 
+            console.log(`تم تحميل الملف الحقيقي بنجاح لـ: ${type}`);
+            // إعادة بناء مركز القيادة فورا إذا تم تحميل ملفه أثناء التشغيل لأول مرة
+            if(type === 'hq' && structures.length > 0) {
+                const existingHq = structures.find(s => s.userData.type === 'hq');
+                if(existingHq) {
+                    // تفريغ الأشكال المؤقتة القديمة وإدخال الملف الجديد
+                    while(existingHq.children.length > 0){ existingHq.remove(existingHq.children[0]); }
+                    existingHq.add(gltf.scene.clone());
+                }
+            }
+        },
         undefined,
-        (error) => { console.log(`استخدام المجسم الافتراضي لـ ${type} (لم يتم العثور على ملف خارجي بعد)`); }
+        (error) => { console.log(`تنبيه: سيتم استخدام المجسم الاحتياطي لـ [${type}] لعدم العثور على ملف خارجي.`); }
     );
 }
 Object.entries(modelPaths).forEach(([type, path]) => loadGameModels(type, path));
@@ -269,11 +277,9 @@ const closeSettingsBtn = document.getElementById('btn-close-settings');
 settingsBtn.onclick = () => { playSFX('click'); settingsMenu.style.display = 'flex'; };
 closeSettingsBtn.onclick = () => { settingsMenu.style.display = 'none'; msg("⚙️ تم حفظ تعديلات الغرفة التكتيكية."); playSFX('click'); };
 
-// التحكم بمستوى الصوت من الإعدادات
 document.getElementById('volume-music').oninput = (e) => { bgMusic.setVolume(e.target.value / 100); };
 document.getElementById('volume-sfx').oninput = (e) => { sfxAudio.setVolume(e.target.value / 100); };
 
-// متقاطعات جودة الرسوميات وسرعة اللعبة
 let gameSpeedModifier = 1.0;
 let graphicQualityHigh = true;
 
@@ -351,8 +357,7 @@ function msg(text) {
 function createDozerMesh() {
     const group = new THREE.Group();
     if (loadedModels.dozer) {
-        const extModel = loadedModels.dozer.clone();
-        group.add(extModel);
+        group.add(loadedModels.dozer.clone());
     } else {
         const body = new THREE.Mesh(geometries.dozer, new THREE.MeshStandardMaterial({ color: 0xcc7a00 }));
         body.position.y = 0.75; body.castShadow = true; group.add(body);
@@ -363,12 +368,18 @@ function createDozerMesh() {
     return group;
 }
 
+// دالة بناء مركز القيادة الرئيسي مع الكشف الفوري عن الـ GLB
 function createHQStructure(x, z) {
     const bGroup = new THREE.Group();
-    const base = new THREE.Mesh(new THREE.BoxGeometry(12, 5.5, 12), new THREE.MeshStandardMaterial({ color: 0x4d5656 }));
-    base.position.y = 2.75; base.castShadow = base.receiveShadow = true; bGroup.add(base);
-    radarPart = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.5, 0.2), new THREE.MeshStandardMaterial({ color: 0xcc3300 }));
-    radarPart.position.set(4, 9, 4); bGroup.add(radarPart);
+    if (loadedModels.hq) {
+        bGroup.add(loadedModels.hq.clone());
+    } else {
+        // بناء الهيكل الافتراضي البديل في حال لم يقرأ الـ .glb بعد
+        const base = new THREE.Mesh(new THREE.BoxGeometry(12, 5.5, 12), new THREE.MeshStandardMaterial({ color: 0x4d5656 }));
+        base.position.y = 2.75; base.castShadow = base.receiveShadow = true; bGroup.add(base);
+        radarPart = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.5, 0.2), new THREE.MeshStandardMaterial({ color: 0xcc3300 }));
+        radarPart.position.set(4, 9, 4); bGroup.add(radarPart);
+    }
     bGroup.position.set(x, 0, z); scene.add(bGroup);
     bGroup.userData = { type: 'hq', progress: 100, radius: 7.0 };
     structures.push(bGroup);
@@ -621,10 +632,12 @@ function startConstructionUnderground(type, x, z) {
     money -= (type === 'factory' ? 600 : 800); updateUI();
     const bGroup = new THREE.Group();
     
+    // حقن ذكي: إذا وجد المحرك ملف .glb الحقيقي للمبنى يستخدمه فوراً ويلغي الافتراضي
     if (loadedModels[type]) {
         bGroup.add(loadedModels[type].clone());
         bGroup.userData = { type: type, progress: 0, radius: type === 'factory' ? 6.5 : 4.5, isDemolishing: false, lastIncomeTime: 0 };
     } else {
+        // العودة للافتراضي في حال عدم توفر الملف في مجلد models
         if (type === 'factory') {
             const factoryBody = new THREE.Mesh(geometries.factory, new THREE.MeshStandardMaterial({ color: 0x5e6b58 })); factoryBody.position.y = 2.25; bGroup.add(factoryBody);
             const chimney = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 4), new THREE.MeshStandardMaterial({ color: 0x1a2118 })); chimney.position.set(-3.5, 5, -2); bGroup.add(chimney);
