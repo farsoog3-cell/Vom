@@ -27,7 +27,7 @@
             position: absolute; bottom: 0; left: 0; right: 0; height: 140px;
             background: var(--zh-bg); border-top: 3px solid var(--zh-border);
             display: grid; grid-template-columns: 160px 1fr 240px; padding: 0;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.8); box-shadow: box-sizing;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
         }
 
         #radar-section { border-right: 2px solid var(--zh-border); background: #020803; position: relative; display: flex; align-items: center; justify-content: center; }
@@ -229,7 +229,6 @@ const activeMixers = [];
 // --- مستدعي المجسمات ثلاثية الأبعاد (GLTF Loader) ---
 const gltfLoader = new GLTFLoader();
 const loadedModels = { hq: null, dozer: null, factory: null, oil: null, tank: null, infantry: null };
-// تخزين الكليبات الأصلية للمجسمات لتشغيلها عند الاستنساخ والولادة
 const modelAnimations = { hq: [], dozer: [], factory: [], oil: [], tank: [], infantry: [] };
 
 // ربط المسارات الرسمية لملفات الـ GLB
@@ -242,24 +241,25 @@ const modelPaths = {
     infantry: './models/turkish_soldier.glb'  
 };
 
-// دالة ذكية تقوم بتحميل الملف، تخزين بنية المجسم والأنيميشن الخاص به للـ Cloning اللاحق
+// دالة تحميل وتخزين بنية المجسم والأنيميشن الخاص به
 function loadGameModels(type, path) {
     gltfLoader.load(path, 
         (gltf) => { 
             loadedModels[type] = gltf.scene; 
             modelAnimations[type] = gltf.animations || [];
-            console.log(`تم تحميل الملف والأنيميشن بنجاح لـ: ${type}`);
+            console.log(`تم تحميل الملف والأنيميشن لـ: ${type}`);
             
-            // تحديث فوري لمركز القيادة الرئيسي عند اكتمال تحميله
             if(type === 'hq' && structures.length > 0) {
                 const existingHq = structures.find(s => s.userData.type === 'hq');
                 if(existingHq) {
                     while(existingHq.children.length > 0){ existingHq.remove(existingHq.children[0]); }
                     
+                    // تصحيح اتجاه الـ HQ الخارجي إذا لزم الأمر
+                    const wrapper = new THREE.Group();
                     const hqClone = gltf.scene.clone();
-                    existingHq.add(hqClone);
+                    wrapper.add(hqClone);
+                    existingHq.add(wrapper);
                     
-                    // إذا كان يحمل أنيميشن، نربطه بالخلاط مباشرة
                     if(modelAnimations.hq.length > 0) {
                         const mixer = new THREE.AnimationMixer(hqClone);
                         const action = mixer.clipAction(modelAnimations.hq[0]);
@@ -271,7 +271,7 @@ function loadGameModels(type, path) {
             }
         },
         undefined,
-        (error) => { console.log(`تنبيه: سيتم استخدام المجسم الاحتياطي لـ [${type}] لعدم العثور على ملف خارجي.`); }
+        (error) => { console.log(`تنبيه: سيتم استخدام المجسم الاحتياطي لـ [${type}]`); }
     );
 }
 Object.entries(modelPaths).forEach(([type, path]) => loadGameModels(type, path));
@@ -370,16 +370,20 @@ function msg(text) {
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 250); }, 2500);
 }
 
-// --- Spawning Logic ---
+// --- Spawning Logic (تم تصحيح اتجاه المشي هنا) ---
 function createDozerMesh() {
     const group = new THREE.Group();
-    let dozerVisual = null;
     
     if (loadedModels.dozer) {
-        dozerVisual = loadedModels.dozer.clone();
-        group.add(dozerVisual);
+        // إنشاء حاوية لتعديل محور الاتجاه الخلفي للـ GLB ليصبح أمامياً متوافقاً مع الحسابات الرياضية
+        const orientationWrapper = new THREE.Group();
+        const dozerVisual = loadedModels.dozer.clone();
         
-        // تفعيل الأنيميشن للجرافة إن وجد
+        // تدوير المجسم الداخلي 180 درجة إذا كان يمشي بظهره
+        dozerVisual.rotation.y = Math.PI; 
+        orientationWrapper.add(dozerVisual);
+        group.add(orientationWrapper);
+        
         if(modelAnimations.dozer.length > 0) {
             const mixer = new THREE.AnimationMixer(dozerVisual);
             const action = mixer.clipAction(modelAnimations.dozer[0]);
@@ -397,7 +401,6 @@ function createDozerMesh() {
     return group;
 }
 
-// بناء مركز القيادة الرئيسي مع الكشف الفوري عن الـ GLB
 function createHQStructure(x, z) {
     const bGroup = new THREE.Group();
     if (loadedModels.hq) {
@@ -628,8 +631,13 @@ document.getElementById('btn-infantry').onclick = () => {
         if(fact.userData.isDemolishing) return;
         const uGroup = new THREE.Group();
         if (loadedModels.infantry) {
+            const orientationWrapper = new THREE.Group();
             const infVisual = loadedModels.infantry.clone();
-            uGroup.add(infVisual);
+            
+            // تصحيح التفاف المشاة الخارجي بزاوية 180 درجة لمواجهة اتجاه المشي الصحيح (+Z)
+            infVisual.rotation.y = Math.PI;
+            orientationWrapper.add(infVisual);
+            uGroup.add(orientationWrapper);
             
             if(modelAnimations.infantry.length > 0) {
                 const mixer = new THREE.AnimationMixer(infVisual);
@@ -655,8 +663,13 @@ document.getElementById('btn-tank').onclick = () => {
         if(fact.userData.isDemolishing) return;
         const tGroup = new THREE.Group();
         if (loadedModels.tank) {
+            const orientationWrapper = new THREE.Group();
             const tankVisual = loadedModels.tank.clone();
-            tGroup.add(tankVisual);
+            
+            // تصحيح التفاف الدبابة الموجهة برمجياً لتسير للأمام بالمدفع وليس بالعكس
+            tankVisual.rotation.y = Math.PI; 
+            orientationWrapper.add(tankVisual);
+            tGroup.add(orientationWrapper);
             
             if(modelAnimations.tank.length > 0) {
                 const mixer = new THREE.AnimationMixer(tankVisual);
@@ -677,7 +690,7 @@ document.getElementById('btn-tank').onclick = () => {
 };
 
 function startBuildMode(type) {
-    let cost = type === 'factory' ? 600 : 800; if (money < cost) { msg("عفواً، الموارد غير كافية!"); return; }
+    let cost = type === 'factory' ? 600 : 800; if (money < cost) { msg("عفواً، Morken Generals: الموارد غير كافية!"); return; }
     buildMode = type; buildGhost.visible = true; playSFX('click');
 }
 document.getElementById('btn-factory').onclick = () => startBuildMode('factory');
@@ -693,7 +706,7 @@ function startConstructionUnderground(type, x, z) {
         
         if(modelAnimations[type].length > 0) {
             const mixer = new THREE.AnimationMixer(structVisual);
-            const action = mixer.clipAction(modelAnimations[type[0]]);
+            const action = mixer.clipAction(modelAnimations[type][0]);
             action.play();
             bGroup.userData.mixer = mixer;
             activeMixers.push(mixer);
@@ -742,10 +755,10 @@ function animate() {
     requestAnimationFrame(animate); 
     const delta = clock.getDelta();
     const time = clock.getElapsedTime();
-    const speedFactor = 0.16 * gameSpeedModifier;
-    const unitSpeedFactor = 0.2 * gameSpeedModifier;
+    const speedFactor = 12.0 * delta * gameSpeedModifier;
+    const unitSpeedFactor = 14.0 * delta * gameSpeedModifier;
 
-    // تحديث جميع الـ Mixers الفعالة داخل اللعبة طبقاً لسرعة الإطارات ومعدل سرعة اللعبة الحالي
+    // تحديث المحركات الحركية المرفقة بملفات الـ GLB بشكل فوري ودقيق
     activeMixers.forEach(mixer => mixer.update(delta * gameSpeedModifier));
 
     if (radarPart) radarPart.rotation.y += 0.04 * gameSpeedModifier;
@@ -753,7 +766,10 @@ function animate() {
 
     dozers.forEach(dozer => {
         const dx = dozer.userData.targetX - dozer.position.x; const dz = dozer.userData.targetZ - dozer.position.z; const dist = Math.sqrt(dx*dx + dz*dz);
-        if (dist > 0.6) { dozer.rotation.y = Math.atan2(dx, dz); dozer.position.x += (dx / dist) * speedFactor; dozer.position.z += (dz / dist) * speedFactor; }
+        if (dist > 0.6) { 
+            dozer.rotation.y = Math.atan2(dx, dz); 
+            dozer.position.x += (dx / dist) * speedFactor; dozer.position.z += (dz / dist) * speedFactor; 
+        }
         else if (dozer.userData.isBuilding) { dozer.userData.isBuilding = false; dozer.userData.currentProject = startConstructionUnderground(dozer.userData.buildingType, dozer.position.x, dozer.position.z); }
         checkCollisions(dozer);
         if (dozer.userData.currentProject) {
@@ -769,7 +785,6 @@ function animate() {
             struct.position.y -= 0.08 * gameSpeedModifier;
             if (Math.random() < 0.5) createSmokeParticle(struct.position, 1, 0x1c211a);
             if (struct.position.y <= -7) { 
-                // إزالة الـ mixer الخاص بالمبنى عند حذفه لمنع استهلاك الذاكرة
                 if(struct.userData.mixer) {
                     const idx = activeMixers.indexOf(struct.userData.mixer);
                     if(idx > -1) activeMixers.splice(idx, 1);
@@ -808,7 +823,10 @@ function animate() {
 
     units.forEach(unit => {
         const dx = unit.userData.targetX - unit.position.x; const dz = unit.userData.targetZ - unit.position.z; const dist = Math.sqrt(dx*dx + dz*dz);
-        if (dist > 0.5) { unit.rotation.y = Math.atan2(dx, dz); unit.position.x += (dx / dist) * unitSpeedFactor; unit.position.z += (dz / dist) * unitSpeedFactor; }
+        if (dist > 0.5) { 
+            unit.rotation.y = Math.atan2(dx, dz); 
+            unit.position.x += (dx / dist) * unitSpeedFactor; unit.position.z += (dz / dist) * unitSpeedFactor; 
+        }
         checkCollisions(unit);
     });
 
