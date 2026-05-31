@@ -20,7 +20,8 @@
             position: fixed; inset: 0; background: #000; z-index: 999;
             display: none; flex-direction: column; align-items: center; justify-content: center; color: var(--zh-green); text-align: center;
         }
-        @media (orientation: portrait) { #rotate-alert { display: flex; } }
+        /* إظهار التنبيه فقط على الهواتف بوضع Portrait العادي */
+        @media (max-width: 768px) and (orientation: portrait) { #rotate-alert { display: flex; } }
 
         /* شريط واجهة التحكم السفلي */
         #command-bar { 
@@ -68,7 +69,7 @@
         #fullscreen-btn { left: 15px; }
         #settings-btn { left: 60px; }
 
-        /* نافذة الإعدادات العسكرية الكلاسيكية */
+        /* نافذة الإعدادات الكلاسيكية */
         #settings-menu {
             position: absolute; inset: 0; margin: auto; width: 340px; height: 300px;
             background: var(--zh-bg); border: 2px solid var(--zh-green);
@@ -223,16 +224,13 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// --- مصفوفات متابعة خلاطات وأنيميشن اللعبة الجدد والمنفصلين ---
 const activeMixers = [];
 const customAnimations = { dozer: [], factory: [], oil: [], tank: [], infantry: [] };
 
-// --- مستدعي المجسمات ثلاثية الأبعاد (GLTF Loader) ---
 const gltfLoader = new GLTFLoader();
 const loadedModels = { hq: null, dozer: null, factory: null, oil: null, tank: null, infantry: null };
 const modelAnimations = { hq: [], dozer: [], factory: [], oil: [], tank: [], infantry: [] };
 
-// ربط المسارات الرسمية لملفات الـ GLB للمجسمات
 const modelPaths = {
     hq: './models/command_center.glb',        
     dozer: './models/turkish_dozer.glb',      
@@ -242,14 +240,12 @@ const modelPaths = {
     infantry: './models/turkish_soldier.glb'  
 };
 
-// 🌟 مسارات ملفات الأنيميشن المنفصلة (قم بتحديث أسماء الملفات هنا عندما تضيفها)
 const animationPaths = {
     dozer: './models/dozer_walk_anim.glb',
     tank: './models/tank_drive_anim.glb',
     infantry: './models/soldier_run_anim.glb'
 };
 
-// دالة تحميل وتخزين بنية المجسم والأنيميشن الخاص به
 function loadGameModels(type, path) {
     gltfLoader.load(path, 
         (gltf) => { 
@@ -261,7 +257,6 @@ function loadGameModels(type, path) {
                 const existingHq = structures.find(s => s.userData.type === 'hq');
                 if(existingHq) {
                     while(existingHq.children.length > 0){ existingHq.remove(existingHq.children[0]); }
-                    
                     const wrapper = new THREE.Group();
                     const hqClone = gltf.scene.clone();
                     wrapper.add(hqClone);
@@ -283,7 +278,6 @@ function loadGameModels(type, path) {
 }
 Object.entries(modelPaths).forEach(([type, path]) => loadGameModels(type, path));
 
-// 🌟 دالة تحميل ملفات الأنيميشن المنفصلة وتخزين كليبات الحركة بداخلها
 function loadCustomAnimations(type, path) {
     gltfLoader.load(path, 
         (gltf) => {
@@ -297,7 +291,6 @@ function loadCustomAnimations(type, path) {
     );
 }
 Object.entries(animationPaths).forEach(([type, path]) => loadCustomAnimations(type, path));
-
 
 // --- تحكم شاشات الإعدادات والملء الكامل ---
 const fsBtn = document.getElementById('fullscreen-btn');
@@ -375,6 +368,11 @@ let money = 3000; let selectedObject = null; let buildMode = null; let tacticalA
 const dozers = []; const structures = []; const units = []; const smokeParticles = []; const floatingTexts = [];
 const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
 
+// نظام رصد أزرار لوحة المفاتيح لتحريك الكاميرا
+const keysPressed = {};
+window.addEventListener('keydown', (e) => { keysPressed[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
+
 const geometries = {
     dozer: new THREE.BoxGeometry(2.6, 1.5, 3.6),
     factory: new THREE.BoxGeometry(11, 4.5, 8.5),
@@ -393,7 +391,6 @@ function msg(text) {
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 250); }, 2500);
 }
 
-// 🌟 دالتين لتشغيل وإيقاف أنيميشن الحركة المنفصل بالتوقيت الصحيح
 function playUnitAnimation(unitGroup) {
     if(unitGroup.userData.action && !unitGroup.userData.action.isRunning()) {
         unitGroup.userData.action.play();
@@ -405,22 +402,17 @@ function stopUnitAnimation(unitGroup) {
     }
 }
 
-// --- Spawning Logic (تمت إضافة إزاحة زاوية الانحراف لتدعم أي مجسم خارجي) ---
+// --- Spawning Logic ---
 function createDozerMesh(angleOffset = 180) {
     const group = new THREE.Group();
-    
     if (loadedModels.dozer) {
         const orientationWrapper = new THREE.Group();
         const dozerVisual = loadedModels.dozer.clone();
-        
-        // استخدام متغير الـ angleOffset الممرر للتحكم باتجاه وجه الجرافة بدقة بالدرجات
         orientationWrapper.rotation.y = THREE.MathUtils.degToRad(angleOffset); 
         orientationWrapper.add(dozerVisual);
         group.add(orientationWrapper);
         
-        // ربط خلاط الأنيميشن (المدمج أو المنفصل) بالـ Visual المباشر
         let finalAnim = modelAnimations.dozer.length > 0 ? modelAnimations.dozer[0] : (customAnimations.dozer.length > 0 ? customAnimations.dozer[0] : null);
-        
         if(finalAnim) {
             const mixer = new THREE.AnimationMixer(dozerVisual);
             const action = mixer.clipAction(finalAnim);
@@ -443,7 +435,6 @@ function createHQStructure(x, z) {
     if (loadedModels.hq) {
         const hqVisual = loadedModels.hq.clone();
         bGroup.add(hqVisual);
-        
         if(modelAnimations.hq.length > 0) {
             const mixer = new THREE.AnimationMixer(hqVisual);
             const action = mixer.clipAction(modelAnimations.hq[0]);
@@ -463,7 +454,6 @@ function createHQStructure(x, z) {
 }
 
 createHQStructure(0, 0);
-// يمكنك تعديل زاوية الانحراف هنا (مثل: 0 أو 90 أو 180) حسب ملفك الجديد
 const firstDozer = createDozerMesh(180); firstDozer.position.set(-15, 0, 15);
 firstDozer.userData.targetX = -15; firstDozer.userData.targetZ = 15;
 scene.add(firstDozer); dozers.push(firstDozer);
@@ -485,27 +475,40 @@ function createSmokeParticle(pos, heightOffset = 4, customColor = 0x556655) {
     smokeParticles.push({ mesh: pMesh, vx: (Math.random() - 0.5) * 0.03, vy: Math.random() * 0.04 + 0.05, vz: (Math.random() - 0.5) * 0.03, life: 1.0 });
 }
 
-// --- Interaction ---
+// --- Interaction Engine (دعم موحد للفأرة واللمس معاً) ---
 let isDragging = false, prevX, prevY;
-window.addEventListener('touchstart', (e) => {
-    if(e.touches[0].clientY > window.innerHeight - 140 || settingsMenu.style.display === 'flex') return;
-    isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
-    mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
-    handleInteraction();
-});
 
-window.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    if (!buildMode && !selectedObject) {
-        camera.position.x -= (e.touches[0].clientX - prevX) * 0.14; camera.position.z -= (e.touches[0].clientY - prevY) * 0.14;
-    } else if (buildMode) {
-        mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+function onPointerDown(clientX, clientY) {
+    if(clientY > window.innerHeight - 140 || settingsMenu.style.display === 'flex') return;
+    isDragging = true; prevX = clientX; prevY = clientY;
+    mouse.x = (clientX / window.innerWidth) * 2 - 1; mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    handleInteraction();
+}
+
+function onPointerMove(clientX, clientY) {
+    mouse.x = (clientX / window.innerWidth) * 2 - 1; mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    
+    if (isDragging && !buildMode && !selectedObject) {
+        camera.position.x -= (clientX - prevX) * 0.14; camera.position.z -= (clientY - prevY) * 0.14;
+        prevX = clientX; prevY = clientY;
+    } 
+    
+    // تحريك خيال المبنى الأخضر مع المؤشر على الكمبيوتر أو الموبايل
+    if (buildMode) {
         raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObject(ground);
         if(intersects.length > 0) buildGhost.position.set(Math.round(intersects[0].point.x/2)*2, 0.1, Math.round(intersects[0].point.z/2)*2);
     }
-    prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
-});
+}
+
+// ربط أحداث الشاشات التي تدعم اللمس
+window.addEventListener('touchstart', (e) => { onPointerDown(e.touches[0].clientX, e.touches[0].clientY); });
+window.addEventListener('touchmove', (e) => { onPointerMove(e.touches[0].clientX, e.touches[0].clientY); });
 window.addEventListener('touchend', () => { isDragging = false; });
+
+// ربط أحداث الفأرة للكمبيوتر
+window.addEventListener('mousedown', (e) => { onPointerDown(e.clientX, e.clientY); });
+window.addEventListener('mousemove', (e) => { onPointerMove(e.clientX, e.clientY); });
+window.addEventListener('mouseup', () => { isDragging = false; });
 
 function checkCollisions(unitObj) {
     structures.forEach(struct => {
@@ -656,7 +659,6 @@ function triggerProductionTimer(btnId, duration, onComplete, factoryObj) {
 document.getElementById('btn-spawn-dozer').onclick = () => {
     if (money < 1000) return; money -= 1000; updateUI(); playSFX('click');
     triggerProductionTimer('btn-spawn-dozer', 4.0, () => {
-        // إذا كان المجسم الجديد منحرفاً، عدل زاوية الـ 180 الممرة هنا لتطابق وجهه الجديد
         const dMesh = createDozerMesh(180); dMesh.position.set(0, 0, 9);
         dMesh.userData.targetX = (Math.random() * 12) - 6; dMesh.userData.targetZ = 15;
         scene.add(dMesh); dozers.push(dMesh); msg("🚜 تم تدشين جرافة صيانة وبناء عسكرية جديدة.");
@@ -672,13 +674,10 @@ document.getElementById('btn-infantry').onclick = () => {
         if (loadedModels.infantry) {
             const orientationWrapper = new THREE.Group();
             const infVisual = loadedModels.infantry.clone();
-            
-            // 🌟 تعديل زاوية انحراف المشاة الجدد (افتراضياً 180 للتصميم القديم)
             orientationWrapper.rotation.y = Math.PI; 
             orientationWrapper.add(infVisual);
             uGroup.add(orientationWrapper);
             
-            // ربط ملف الأنيميشن المنفصل للمشاة إن وجد
             let finalAnim = modelAnimations.infantry.length > 0 ? modelAnimations.infantry[0] : (customAnimations.infantry.length > 0 ? customAnimations.infantry[0] : null);
             if(finalAnim) {
                 const mixer = new THREE.AnimationMixer(infVisual);
@@ -706,13 +705,10 @@ document.getElementById('btn-tank').onclick = () => {
         if (loadedModels.tank) {
             const orientationWrapper = new THREE.Group();
             const tankVisual = loadedModels.tank.clone();
-            
-            // 🌟 تعديل زاوية انحراف الدبابة الجديدة لتسير للأمام بمدفعها
             orientationWrapper.rotation.y = Math.PI; 
             orientationWrapper.add(tankVisual);
             tGroup.add(orientationWrapper);
             
-            // ربط ملف الأنيميشن المنفصل للدبابة إن وجد
             let finalAnim = modelAnimations.tank.length > 0 ? modelAnimations.tank[0] : (customAnimations.tank.length > 0 ? customAnimations.tank[0] : null);
             if(finalAnim) {
                 const mixer = new THREE.AnimationMixer(tankVisual);
@@ -746,7 +742,6 @@ function startConstructionUnderground(type, x, z) {
     if (loadedModels[type]) {
         const structVisual = loadedModels[type].clone();
         bGroup.add(structVisual);
-        
         if(modelAnimations[type].length > 0) {
             const mixer = new THREE.AnimationMixer(structVisual);
             const action = mixer.clipAction(modelAnimations[type][0]);
@@ -801,7 +796,13 @@ function animate() {
     const speedFactor = 12.0 * delta * gameSpeedModifier;
     const unitSpeedFactor = 14.0 * delta * gameSpeedModifier;
 
-    // تحديث المحركات الحركية المرفقة بملفات الـ GLB بشكل فوري ودقيق
+    // تحريك الكاميرا باستخدام لوحة المفاتيح (WASD أو الأسهم) لقادة الكمبيوتر
+    const camSpeed = 40.0 * delta;
+    if (keysPressed['w'] || keysPressed['arrowup']) camera.position.z -= camSpeed;
+    if (keysPressed['s'] || keysPressed['arrowdown']) camera.position.z += camSpeed;
+    if (keysPressed['a'] || keysPressed['arrowleft']) camera.position.x -= camSpeed;
+    if (keysPressed['d'] || keysPressed['arrowright']) camera.position.x += camSpeed;
+
     activeMixers.forEach(mixer => mixer.update(delta * gameSpeedModifier));
 
     if (radarPart) radarPart.rotation.y += 0.04 * gameSpeedModifier;
@@ -812,10 +813,10 @@ function animate() {
         if (dist > 0.6) { 
             dozer.rotation.y = Math.atan2(dx, dz); 
             dozer.position.x += (dx / dist) * speedFactor; dozer.position.z += (dz / dist) * speedFactor; 
-            playUnitAnimation(dozer); // 🌟 تشغيل أنيميشن السير المنفصل للجرافة
+            playUnitAnimation(dozer); 
         }
         else {
-            stopUnitAnimation(dozer); // 🌟 إيقاف أنيميشن الحركة عند الوصول للهدف
+            stopUnitAnimation(dozer); 
             if (dozer.userData.isBuilding) { dozer.userData.isBuilding = false; dozer.userData.currentProject = startConstructionUnderground(dozer.userData.buildingType, dozer.position.x, dozer.position.z); }
         }
         checkCollisions(dozer);
@@ -873,9 +874,9 @@ function animate() {
         if (dist > 0.5) { 
             unit.rotation.y = Math.atan2(dx, dz); 
             unit.position.x += (dx / dist) * unitSpeedFactor; unit.position.z += (dz / dist) * unitSpeedFactor; 
-            playUnitAnimation(unit); // 🌟 تشغيل أنيميشن الحركة المنفصل للوحدات القتالية أثناء سيرها
+            playUnitAnimation(unit); 
         } else {
-            stopUnitAnimation(unit); // 🌟 إيقاف حركة السير أو الركض للوحدة فور وقوفها
+            stopUnitAnimation(unit); 
         }
         checkCollisions(unit);
     });
