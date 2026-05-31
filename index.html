@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Morken Generals: Zero Hour Interface with Settings</title>
+    <title>Morken Generals: Zero Hour Interface with Advanced Settings</title>
     <style>
         :root { 
             --zh-green: #00ff33;
@@ -20,7 +20,8 @@
             position: fixed; inset: 0; background: #000; z-index: 999;
             display: none; flex-direction: column; align-items: center; justify-content: center; color: var(--zh-green); text-align: center;
         }
-        @media (orientation: portrait) { #rotate-alert { display: flex; } }
+        /* لا تظهر رسالة التدوير إلا على الهواتف الشاقولية فقط ولا تؤثر على الكمبيوتر */
+        @media (orientation: portrait) and (max-width: 768px) { #rotate-alert { display: flex; } }
 
         /* شريط واجهة التحكم السفلي */
         #command-bar { 
@@ -62,26 +63,25 @@
 
         #money-panel { position: absolute; top: 15px; right: 20px; color: var(--zh-green); background: var(--zh-bg); padding: 5px 15px; border: 1px solid var(--zh-border); font-size: 14px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px; }
         
-        /* أزرار الزوايا العلوية اليسارية */
         .top-btn { position: absolute; top: 15px; background: var(--zh-bg); color: var(--zh-green); border: 1px solid var(--zh-border); width: 36px; height: 36px; cursor: pointer; pointer-events: all; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .top-btn:hover { background: rgba(0,255,51,0.1); }
         #fullscreen-btn { left: 15px; }
         #settings-btn { left: 60px; }
 
-        /* نافذة الإعدادات العسكرية الكلاسيكية */
+        /* نافذة الإعدادات العسكرية */
         #settings-menu {
-            position: absolute; inset: 0; margin: auto; width: 340px; height: 300px;
+            position: absolute; inset: 0; margin: auto; width: 360px; height: 340px;
             background: var(--zh-bg); border: 2px solid var(--zh-green);
             box-shadow: 0 0 30px rgba(0, 255, 51, 0.3); z-index: 300;
             display: none; flex-direction: column; padding: 15px; box-sizing: border-box;
         }
-        .settings-header { color: var(--zh-green); font-size: 16px; font-weight: bold; border-bottom: 1px solid var(--zh-border); padding-bottom: 5px; margin-bottom: 15px; text-align: center; }
-        .settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: #fff; font-size: 12px; }
-        .settings-row input[type="range"] { accent-color: var(--zh-green); width: 140px; cursor: pointer; }
-        .btn-group { display: flex; gap: 5px; }
-        .btn-setting-option { background: #002200; border: 1px solid var(--zh-border); color: #fff; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+        .settings-header { color: var(--zh-green); font-size: 16px; font-weight: bold; border-bottom: 1px solid var(--zh-border); padding-bottom: 5px; margin-bottom: 12px; text-align: center; }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; font-size: 12px; }
+        .settings-row input[type="range"] { accent-color: var(--zh-green); width: 120px; cursor: pointer; }
+        .btn-group { display: flex; gap: 4px; }
+        .btn-setting-option { background: #002200; border: 1px solid var(--zh-border); color: #fff; padding: 4px 6px; font-size: 10px; cursor: pointer; }
         .btn-setting-option.active { background: var(--zh-green); color: #000; font-weight: bold; }
-        .btn-close-settings { background: #550000; border: 1px solid #ff3333; color: #fff; padding: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-top: auto; }
+        .btn-close-settings { background: #550000; border: 1px solid #ff3333; color: #fff; padding: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: auto; }
         .btn-close-settings:hover { background: #880000; }
 
         #notification-container { position: absolute; top: 70px; left: 15px; width: 280px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 200; }
@@ -91,7 +91,7 @@
 </head>
 <body>
 
-<div id="rotate-alert">🔄 Please Rotate Your Device for Battle Command</div>
+<div id="rotate-alert">🔄 يرجى تدوير الشاشة لتفعيل واجهة إدارة المعركة</div>
 
 <div id="ui-layer">
     <div id="money-panel">💵 <span id="money-txt">3000</span></div>
@@ -102,7 +102,7 @@
     <div id="notification-container"></div>
 
     <div id="settings-menu" class="pointer-all">
-        <div class="settings-header">💻 خيارات الجنرال التكتيكية</div>
+        <div class="settings-header">💻 خيارات الحرب والأداء التكتيكي</div>
         
         <div class="settings-row">
             <span>مستوى الموسيقى:</span>
@@ -113,14 +113,15 @@
             <input type="range" id="volume-sfx" min="0" max="100" value="90">
         </div>
         <div class="settings-row">
-            <span>سرعة اللعبة (Game Speed):</span>
+            <span>سرعة اللعبة (Speed):</span>
             <input type="range" id="game-speed" min="50" max="150" value="100">
         </div>
         <div class="settings-row">
-            <span>الجودة الرسومية:</span>
+            <span>رسوميات المحرك:</span>
             <div class="btn-group">
-                <button class="btn-setting-option" id="fx-low">منخفضة</button>
-                <button class="btn-setting-option active" id="fx-high">عالية</button>
+                <button class="btn-setting-option" id="fx-potato">ضعيف جداً 🔋</button>
+                <button class="btn-setting-option" id="fx-low">متوسط</button>
+                <button class="btn-setting-option active" id="fx-high">عالية (HQ)</button>
             </div>
         </div>
         
@@ -175,7 +176,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// --- إدارة الصوتيات والموسيقى الحربية ---
+// --- إدارة الصوتيات ---
 const audioListener = new THREE.AudioListener();
 const bgMusic = new THREE.Audio(audioListener);
 const sfxAudio = new THREE.Audio(audioListener);
@@ -195,7 +196,7 @@ function playMusic() {
         bgMusic.setLoop(true);
         bgMusic.setVolume(document.getElementById('volume-music').value / 100);
         bgMusic.play();
-    });
+    }, undefined, () => console.log("Music file omitted"));
 }
 
 function playSFX(type) {
@@ -204,7 +205,7 @@ function playSFX(type) {
             sfxAudio.setBuffer(buffer);
             sfxAudio.setVolume(document.getElementById('volume-sfx').value / 100);
             sfxAudio.play();
-        });
+        }, undefined, () => {});
     }
 }
 
@@ -218,20 +219,17 @@ const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHei
 camera.position.set(0, 65, 55); camera.lookAt(0, 0, 5);
 camera.add(audioListener); 
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+// إعداد المصير (Renderer)
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// --- مصفوفة مخصصة لمتابعة خلاطات الأنيميشن (Animation Mixers) ---
 const activeMixers = [];
-
-// --- مستدعي المجسمات ثلاثية الأبعاد (GLTF Loader) ---
 const gltfLoader = new GLTFLoader();
 const loadedModels = { hq: null, dozer: null, factory: null, oil: null, tank: null, infantry: null };
 const modelAnimations = { hq: [], dozer: [], factory: [], oil: [], tank: [], infantry: [] };
 
-// ربط المسارات الرسمية لملفات الـ GLB
 const modelPaths = {
     hq: './models/command_center.glb',        
     dozer: './models/turkish_dozer.glb',      
@@ -241,37 +239,27 @@ const modelPaths = {
     infantry: './models/turkish_soldier.glb'  
 };
 
-// دالة تحميل وتخزين بنية المجسم والأنيميشن الخاص به
 function loadGameModels(type, path) {
     gltfLoader.load(path, 
         (gltf) => { 
             loadedModels[type] = gltf.scene; 
             modelAnimations[type] = gltf.animations || [];
-            console.log(`تم تحميل الملف والأنيميشن لـ: ${type}`);
-            
             if(type === 'hq' && structures.length > 0) {
                 const existingHq = structures.find(s => s.userData.type === 'hq');
                 if(existingHq) {
                     while(existingHq.children.length > 0){ existingHq.remove(existingHq.children[0]); }
-                    
-                    // تصحيح اتجاه الـ HQ الخارجي إذا لزم الأمر
                     const wrapper = new THREE.Group();
                     const hqClone = gltf.scene.clone();
                     wrapper.add(hqClone);
                     existingHq.add(wrapper);
-                    
                     if(modelAnimations.hq.length > 0) {
                         const mixer = new THREE.AnimationMixer(hqClone);
-                        const action = mixer.clipAction(modelAnimations.hq[0]);
-                        action.play();
-                        existingHq.userData.mixer = mixer;
-                        activeMixers.push(mixer);
+                        mixer.clipAction(modelAnimations.hq[0]).play();
+                        existingHq.userData.mixer = mixer; activeMixers.push(mixer);
                     }
                 }
             }
-        },
-        undefined,
-        (error) => { console.log(`تنبيه: سيتم استخدام المجسم الاحتياطي لـ [${type}]`); }
+        }, undefined, () => { console.log(`استخدام المجسم الاحتياطي الخفيف لـ [${type}]`); }
     );
 }
 Object.entries(modelPaths).forEach(([type, path]) => loadGameModels(type, path));
@@ -292,31 +280,51 @@ const settingsMenu = document.getElementById('settings-menu');
 const closeSettingsBtn = document.getElementById('btn-close-settings');
 
 settingsBtn.onclick = () => { playSFX('click'); settingsMenu.style.display = 'flex'; };
-closeSettingsBtn.onclick = () => { settingsMenu.style.display = 'none'; msg("⚙️ تم حفظ تعديلات الغرفة التكتيكية."); playSFX('click'); };
+closeSettingsBtn.onclick = () => { settingsMenu.style.display = 'none'; msg("⚙️ تم حفظ التعديلات."); playSFX('click'); };
 
 document.getElementById('volume-music').oninput = (e) => { bgMusic.setVolume(e.target.value / 100); };
 document.getElementById('volume-sfx').oninput = (e) => { sfxAudio.setVolume(e.target.value / 100); };
 
 let gameSpeedModifier = 1.0;
-let graphicQualityHigh = true;
+let graphicQuality = 'high'; // high, low, potato
 
 document.getElementById('game-speed').oninput = (e) => { gameSpeedModifier = e.target.value / 100; };
-document.getElementById('fx-low').onclick = () => {
-    graphicQualityHigh = false;
-    document.getElementById('fx-low').classList.add('active');
-    document.getElementById('fx-high').classList.remove('active');
-    renderer.shadowMap.enabled = false;
-    scene.fog = null;
-    playSFX('click');
-};
-document.getElementById('fx-high').onclick = () => {
-    graphicQualityHigh = true;
-    document.getElementById('fx-high').classList.add('active');
+
+// نظام التنقل بين مستويات الجودة البرمجية المتقدمة لجميع الأجهزة
+function applyGraphicsQuality(quality) {
+    graphicQuality = quality;
+    document.getElementById('fx-potato').classList.remove('active');
     document.getElementById('fx-low').classList.remove('active');
-    renderer.shadowMap.enabled = true;
-    scene.fog = new THREE.FogExp2(0x22301a, 0.0025);
-    playSFX('click');
-};
+    document.getElementById('fx-high').classList.remove('active');
+
+    if (quality === 'high') {
+        document.getElementById('fx-high').classList.add('active');
+        renderer.shadowMap.enabled = true;
+        scene.fog = new THREE.FogExp2(0x22301a, 0.0025);
+        ground.material.map = groundTexture;
+        ground.material.needsUpdate = true;
+    } else if (quality === 'low') {
+        document.getElementById('fx-low').classList.add('active');
+        renderer.shadowMap.enabled = false;
+        scene.fog = new THREE.FogExp2(0x22301a, 0.005);
+        ground.material.map = groundTexture;
+        ground.material.needsUpdate = true;
+    } else if (quality === 'potato') {
+        document.getElementById('fx-potato').classList.add('active');
+        renderer.shadowMap.enabled = false;
+        scene.fog = null; // الغاء تفعيل الضباب لزيادة سرعة المعالجة
+        ground.material.map = null; // إزالة الخامات الثقيلة تماماً
+        ground.material.color.setHex(0x2d3b20);
+        ground.material.needsUpdate = true;
+        // إفراغ عناصر الدخان الفائقة فورا تسريعا للكرت
+        smokeParticles.forEach(p => scene.remove(p.mesh));
+        smokeParticles.length = 0;
+    }
+}
+
+document.getElementById('fx-high').onclick = () => { playSFX('click'); applyGraphicsQuality('high'); };
+document.getElementById('fx-low').onclick = () => { playSFX('click'); applyGraphicsQuality('low'); };
+document.getElementById('fx-potato').onclick = () => { playSFX('click'); applyGraphicsQuality('potato'); };
 
 // --- Lighting ---
 const ambient = new THREE.AmbientLight(0xffffff, 0.7); scene.add(ambient);
@@ -325,21 +333,21 @@ sunLight.position.set(80, 140, 60); sunLight.castShadow = true;
 scene.add(sunLight);
 
 // --- Ground ---
-const canvasSize = 512; const tempCanvas = document.createElement('canvas');
+const canvasSize = 256; const tempCanvas = document.createElement('canvas');
 tempCanvas.width = canvasSize; tempCanvas.height = canvasSize;
 const ctx = tempCanvas.getContext('2d');
 ctx.fillStyle = '#3a4a2b'; ctx.fillRect(0, 0, canvasSize, canvasSize);
-for (let i = 0; i < 400; i++) {
+for (let i = 0; i < 150; i++) {
     ctx.fillStyle = Math.random() > 0.5 ? '#485c35' : '#2d3b20';
-    ctx.beginPath(); ctx.arc(Math.random()*canvasSize, Math.random()*canvasSize, Math.random()*20+5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(Math.random()*canvasSize, Math.random()*canvasSize, Math.random()*10+3, 0, Math.PI*2); ctx.fill();
 }
 const groundTexture = new THREE.CanvasTexture(tempCanvas);
-groundTexture.wrapS = THREE.RepeatWrapping; groundTexture.wrapT = THREE.RepeatWrapping; groundTexture.repeat.set(15, 15);
+groundTexture.wrapS = THREE.RepeatWrapping; groundTexture.wrapT = THREE.RepeatWrapping; groundTexture.repeat.set(20, 20);
 
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), new THREE.MeshStandardMaterial({ map: groundTexture, roughness: 0.85 }));
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(1500, 1500), new THREE.MeshStandardMaterial({ map: groundTexture, roughness: 0.9 }));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
-const grid = new THREE.GridHelper(500, 120, 0x162410, 0x1d3015);
+const grid = new THREE.GridHelper(500, 100, 0x162410, 0x1d3015);
 grid.position.y = 0.02; scene.add(grid);
 
 const moveMarker = new THREE.Mesh(new THREE.RingGeometry(0.1, 1.3, 4), new THREE.MeshBasicMaterial({ color: 0x00ff33, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }));
@@ -355,7 +363,7 @@ const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
 const geometries = {
     dozer: new THREE.BoxGeometry(2.6, 1.5, 3.6),
     factory: new THREE.BoxGeometry(11, 4.5, 8.5),
-    oil: new THREE.CylinderGeometry(2.5, 3.5, 7, 16),
+    oil: new THREE.CylinderGeometry(2.5, 3.5, 7, 8), // تقليل المضلعات للأجهزة الضعيفة
     ghost: new THREE.BoxGeometry(10, 0.2, 10)
 };
 
@@ -370,32 +378,22 @@ function msg(text) {
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 250); }, 2500);
 }
 
-// --- Spawning Logic (تم تصحيح اتجاه المشي هنا) ---
+// --- Spawning Logic ---
 function createDozerMesh() {
     const group = new THREE.Group();
-    
     if (loadedModels.dozer) {
-        // إنشاء حاوية لتعديل محور الاتجاه الخلفي للـ GLB ليصبح أمامياً متوافقاً مع الحسابات الرياضية
         const orientationWrapper = new THREE.Group();
         const dozerVisual = loadedModels.dozer.clone();
-        
-        // تدوير المجسم الداخلي 180 درجة إذا كان يمشي بظهره
         dozerVisual.rotation.y = Math.PI; 
-        orientationWrapper.add(dozerVisual);
-        group.add(orientationWrapper);
-        
+        orientationWrapper.add(dozerVisual); group.add(orientationWrapper);
         if(modelAnimations.dozer.length > 0) {
             const mixer = new THREE.AnimationMixer(dozerVisual);
-            const action = mixer.clipAction(modelAnimations.dozer[0]);
-            action.play();
-            group.userData.mixer = mixer;
-            activeMixers.push(mixer);
+            mixer.clipAction(modelAnimations.dozer[0]).play();
+            group.userData.mixer = mixer; activeMixers.push(mixer);
         }
     } else {
         const body = new THREE.Mesh(geometries.dozer, new THREE.MeshStandardMaterial({ color: 0xcc7a00 }));
         body.position.y = 0.75; body.castShadow = true; group.add(body);
-        const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 1.8), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-        cabin.position.set(0, 2.0, -0.4); group.add(cabin);
     }
     group.userData = Object.assign({ type: 'dozer', targetX: 0, targetZ: 0, isBuilding: false, currentProject: null, radius: 2.2 }, group.userData);
     return group;
@@ -404,19 +402,15 @@ function createDozerMesh() {
 function createHQStructure(x, z) {
     const bGroup = new THREE.Group();
     if (loadedModels.hq) {
-        const hqVisual = loadedModels.hq.clone();
-        bGroup.add(hqVisual);
-        
+        const hqVisual = loadedModels.hq.clone(); bGroup.add(hqVisual);
         if(modelAnimations.hq.length > 0) {
             const mixer = new THREE.AnimationMixer(hqVisual);
-            const action = mixer.clipAction(modelAnimations.hq[0]);
-            action.play();
-            bGroup.userData.mixer = mixer;
-            activeMixers.push(mixer);
+            mixer.clipAction(modelAnimations.hq[0]).play();
+            bGroup.userData.mixer = mixer; activeMixers.push(mixer);
         }
     } else {
         const base = new THREE.Mesh(new THREE.BoxGeometry(12, 5.5, 12), new THREE.MeshStandardMaterial({ color: 0x4d5656 }));
-        base.position.y = 2.75; base.castShadow = base.receiveShadow = true; bGroup.add(base);
+        base.position.y = 2.75; bGroup.add(base);
         radarPart = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.5, 0.2), new THREE.MeshStandardMaterial({ color: 0xcc3300 }));
         radarPart.position.set(4, 9, 4); bGroup.add(radarPart);
     }
@@ -431,44 +425,80 @@ firstDozer.userData.targetX = -15; firstDozer.userData.targetZ = 15;
 scene.add(firstDozer); dozers.push(firstDozer);
 
 function spawnFloatingText(text, position, customColor = '#00ff33') {
+    if(graphicQuality === 'potato') return; // منع التكست العائم لتوفير الرام
     const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64;
-    const g = canvas.getContext('2d'); g.fillStyle = customColor; g.font = 'bold 28px Courier New'; g.textAlign = 'center'; g.fillText(text, 64, 40);
+    const g = canvas.getContext('2d'); g.fillStyle = customColor; g.font = 'bold 26px Courier New'; g.textAlign = 'center'; g.fillText(text, 64, 40);
     const tex = new THREE.CanvasTexture(canvas); const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
     const sprite = new THREE.Sprite(mat); sprite.position.copy(position); sprite.position.y += 4; sprite.scale.set(6, 3, 1);
     scene.add(sprite); floatingTexts.push({ sprite: sprite, age: 0 });
 }
 
 function createSmokeParticle(pos, heightOffset = 4, customColor = 0x556655) {
-    if(!graphicQualityHigh) return; 
+    if(graphicQuality !== 'high') return; 
     const pMat = new THREE.MeshBasicMaterial({ color: customColor, transparent: true, opacity: 0.4 });
-    const pMesh = new THREE.Mesh(new THREE.SphereGeometry(Math.random() * 0.4 + 0.2, 8, 8), pMat);
-    pMesh.position.set(pos.x + (Math.random()-0.5)*2, pos.y + heightOffset, pos.z + (Math.random()-0.5)*2);
-    scene.add(pMesh);
-    smokeParticles.push({ mesh: pMesh, vx: (Math.random() - 0.5) * 0.03, vy: Math.random() * 0.04 + 0.05, vz: (Math.random() - 0.5) * 0.03, life: 1.0 });
+    const pMesh = new THREE.Mesh(new THREE.SphereGeometry(Math.random() * 0.3 + 0.1, 6, 6), pMat);
+    pMesh.position.set(pos.x, pos.y + heightOffset, pos.z); scene.add(pMesh);
+    smokeParticles.push({ mesh: pMesh, vx: (Math.random() - 0.5) * 0.02, vy: Math.random() * 0.03 + 0.04, vz: (Math.random() - 0.5) * 0.02, life: 1.0 });
 }
 
-// --- Interaction ---
-let isDragging = false, prevX, prevY;
-window.addEventListener('touchstart', (e) => {
-    if(e.touches[0].clientY > window.innerHeight - 140 || settingsMenu.style.display === 'flex') return;
-    isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
-    mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
-    handleInteraction();
-});
+// --- نظام الإدخال الموحد والهجين (الفأرة واللمس معاً للكمبيوتر والموبايل) ---
+let isInteracting = false;
+let startX = 0, startY = 0;
 
-window.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
+function onPointerStart(clientX, clientY) {
+    if(clientY > window.innerHeight - 140 || settingsMenu.style.display === 'flex') return;
+    isInteracting = true; startX = clientX; startY = clientY;
+    mouse.x = (clientX / window.innerWidth) * 2 - 1; mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    handleInteraction();
+}
+
+function onPointerMove(clientX, clientY) {
+    if (!isInteracting) return;
     if (!buildMode && !selectedObject) {
-        camera.position.x -= (e.touches[0].clientX - prevX) * 0.14; camera.position.z -= (e.touches[0].clientY - prevY) * 0.14;
+        camera.position.x -= (clientX - startX) * 0.15; camera.position.z -= (clientY - startY) * 0.15;
     } else if (buildMode) {
-        mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+        mouse.x = (clientX / window.innerWidth) * 2 - 1; mouse.y = -(clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObject(ground);
         if(intersects.length > 0) buildGhost.position.set(Math.round(intersects[0].point.x/2)*2, 0.1, Math.round(intersects[0].point.z/2)*2);
     }
-    prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
-});
-window.addEventListener('touchend', () => { isDragging = false; });
+    startX = clientX; startY = clientY;
+}
 
+function onPointerEnd() { isInteracting = false; }
+
+// مستمعات الكمبيوتر (Mouse)
+window.addEventListener('mousedown', (e) => onPointerStart(e.clientX, e.clientY));
+window.addEventListener('mousemove', (e) => onPointerMove(e.clientX, e.clientY));
+window.addEventListener('mouseup', () => onPointerEnd());
+
+// مستمعات الموبايل (Touch)
+window.addEventListener('touchstart', (e) => { if(e.touches.length > 0) onPointerStart(e.touches[0].clientX, e.touches[0].clientY); });
+window.addEventListener('touchmove', (e) => { if(e.touches.length > 0) onPointerMove(e.touches[0].clientX, e.touches[0].clientY); });
+window.addEventListener('touchend', () => onPointerEnd());
+
+// إضافة ميزة الزووم عبر عجلة الماوس للكمبيوتر (Mouse Wheel Zoom)
+window.addEventListener('wheel', (e) => {
+    if(settingsMenu.style.display === 'flex') return;
+    camera.position.y += e.deltaY * 0.04;
+    camera.position.z += e.deltaY * 0.03;
+    camera.position.y = THREE.MathUtils.clamp(camera.position.y, 25, 140);
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, 20, 130);
+});
+
+// إضافة نظام التحكم بلوحة المفاتيح الكمبيوتر (WASD / Arrows) لتسهيل استكشاف الخريطة
+const keysPressed = {};
+window.addEventListener('keydown', (e) => { keysPressed[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
+
+function handleKeyboardCameraUpdate(delta) {
+    const camSpeed = 40.0 * delta;
+    if (keysPressed['w'] || keysPressed['arrowup']) camera.position.z -= camSpeed;
+    if (keysPressed['s'] || keysPressed['arrowdown']) camera.position.z += camSpeed;
+    if (keysPressed['a'] || keysPressed['arrowleft']) camera.position.x -= camSpeed;
+    if (keysPressed['d'] || keysPressed['arrowright']) camera.position.x += camSpeed;
+}
+
+// --- معالجة الضغط التكتيكي والاختيارات ---
 function checkCollisions(unitObj) {
     structures.forEach(struct => {
         if(struct.userData.progress >= 100 && !struct.userData.isDemolishing) {
@@ -499,12 +529,10 @@ function handleInteraction() {
             while(clickedTarget.parent && clickedTarget.parent !== scene) clickedTarget = clickedTarget.parent;
             selectedObject.userData.targetX = clickedTarget.position.x; selectedObject.userData.targetZ = clickedTarget.position.z;
             showWaypoint(clickedTarget.position.x, clickedTarget.position.z, 0xff3300);
-            msg(`⚔️ تم توجيه أمر الاشتباك المباشر للمجموعة!`);
-            playSFX('click');
+            msg(`⚔️ تم توجيه أمر الاشتباك المباشر للمجموعة!`); playSFX('click');
         } else if (tacticalActionMode === 'defend' && groundIntersects.length > 0) {
             const pt = groundIntersects[0].point; selectedObject.userData.targetX = pt.x; selectedObject.userData.targetZ = pt.z;
-            showWaypoint(pt.x, pt.z, 0x00ffbb); msg(`🛡️ تثبيت حراسة المنطقة المستهدفة.`);
-            playSFX('click');
+            showWaypoint(pt.x, pt.z, 0x00ffbb); msg(`🛡️ تثبيت حراسة المنطقة المستهدفة.`); playSFX('click');
         }
         tacticalActionMode = null;
         document.getElementById('btn-attack-mode').classList.remove('active');
@@ -528,8 +556,7 @@ function handleInteraction() {
         const intersects = raycaster.intersectObject(ground);
         if (intersects.length > 0 && !buildMode) {
             const loc = intersects[0].point; selectedObject.userData.targetX = loc.x; selectedObject.userData.targetZ = loc.z;
-            showWaypoint(loc.x, loc.z); msg("الوحدات في طريقها للإحداثيات المحددة.");
-            playSFX('click');
+            showWaypoint(loc.x, loc.z); msg("الوحدات في طريقها للإحداثيات المحددة."); playSFX('click');
             if(selectedObject.userData.type !== 'dozer') cancelSelection();
             return;
         }
@@ -541,8 +568,7 @@ function handleInteraction() {
         while(rootObj.parent && rootObj.parent !== scene) rootObj = rootObj.parent;
         if(rootObj.userData.isDemolishing) { cancelSelection(); return; }
 
-        selectedObject = rootObj; updateProfileUI(selectedObject.userData.type);
-        playSFX('click');
+        selectedObject = rootObj; updateProfileUI(selectedObject.userData.type); playSFX('click');
         
         document.getElementById('btn-spawn-dozer').disabled = (selectedObject.userData.type !== 'hq');
         document.getElementById('btn-factory').disabled = (selectedObject.userData.type !== 'dozer' || selectedObject.userData.currentProject != null);
@@ -568,11 +594,11 @@ function updateProfileUI(type) {
     const iconEl = document.getElementById('profile-icon'); const nameEl = document.getElementById('profile-name');
     switch(type) {
         case 'hq': iconEl.innerText = "🏢"; nameEl.innerText = "مركز القيادة الكلي"; break;
-        case 'dozer': iconEl.innerText = "🚜"; nameEl.innerText = "جرافة التشييد التركية"; break;
+        case 'dozer': iconEl.innerText = "🚜"; nameEl.innerText = "جرافة التشييد العسكرية"; break;
         case 'factory': iconEl.innerText = "🏭"; nameEl.innerText = "المصنع الحربي للآليات"; break;
         case 'oil': iconEl.innerText = "🛢️"; nameEl.innerText = "بئر بترول الإمداد المالي"; break;
-        case 'tank': iconEl.innerText = "💥"; nameEl.innerText = "دبابة ألطاي التركية"; break;
-        case 'infantry': iconEl.innerText = "🪖"; nameEl.innerText = "قوات الكوماندوز التركية"; break;
+        case 'tank': iconEl.innerText = "💥"; nameEl.innerText = "دبابة ألطاي القتالية"; break;
+        case 'infantry': iconEl.innerText = "🪖"; nameEl.innerText = "قوات الكوماندوز النخبة"; break;
         default: iconEl.innerText = "📡"; nameEl.innerText = "نظام الرادار جاهز";
     }
 }
@@ -585,8 +611,7 @@ document.getElementById('btn-sell-building').onclick = () => {
     const type = selectedObject.userData.type;
     let refund = type === 'factory' ? 300 : 400; money += refund; updateUI();
     spawnFloatingText(`+$${refund}`, selectedObject.position, '#cc7a00');
-    selectedObject.userData.isDemolishing = true; cancelSelection();
-    playSFX('explosion');
+    selectedObject.userData.isDemolishing = true; cancelSelection(); playSFX('explosion');
 };
 
 document.getElementById('btn-stop-order').onclick = () => {
@@ -609,8 +634,7 @@ function triggerProductionTimer(btnId, duration, onComplete, factoryObj) {
         if (elapsed >= duration) {
             clearInterval(interval); progressEl.style.width = '0%'; btn.disabled = false;
             if(factoryObj) { factoryObj.userData.isProducing = false; factoryObj.userData.doorTargetY = 0.8; }
-            onComplete();
-            playSFX('spawn');
+            onComplete(); playSFX('spawn');
         }
     }, 100);
 }
@@ -633,26 +657,19 @@ document.getElementById('btn-infantry').onclick = () => {
         if (loadedModels.infantry) {
             const orientationWrapper = new THREE.Group();
             const infVisual = loadedModels.infantry.clone();
-            
-            // تصحيح التفاف المشاة الخارجي بزاوية 180 درجة لمواجهة اتجاه المشي الصحيح (+Z)
-            infVisual.rotation.y = Math.PI;
-            orientationWrapper.add(infVisual);
-            uGroup.add(orientationWrapper);
-            
+            infVisual.rotation.y = Math.PI; orientationWrapper.add(infVisual); uGroup.add(orientationWrapper);
             if(modelAnimations.infantry.length > 0) {
                 const mixer = new THREE.AnimationMixer(infVisual);
-                const action = mixer.clipAction(modelAnimations.infantry[0]);
-                action.play();
-                uGroup.userData.mixer = mixer;
-                activeMixers.push(mixer);
+                mixer.clipAction(modelAnimations.infantry[0]).play();
+                uGroup.userData.mixer = mixer; activeMixers.push(mixer);
             }
         } else {
-            const uMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.8), new THREE.MeshStandardMaterial({ color: 0x11aa22 }));
+            const uMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.8, 6), new THREE.MeshStandardMaterial({ color: 0x11aa22 }));
             uMesh.position.y = 0.9; uGroup.add(uMesh);
         }
         uGroup.position.set(fact.position.x, 0, fact.position.z + 5.5);
         uGroup.userData = Object.assign({ type: 'infantry', targetX: uGroup.position.x, targetZ: uGroup.position.z + 4, radius: 1.0 }, uGroup.userData);
-        scene.add(uGroup); units.push(uGroup); msg("🪖 تم إخراج فرقة مشاة تركية من المصنع.");
+        scene.add(uGroup); units.push(uGroup); msg("🪖 تم إخراج فرقة مشاة عسكرية من المصنع.");
     }, fact);
 };
 
@@ -665,32 +682,23 @@ document.getElementById('btn-tank').onclick = () => {
         if (loadedModels.tank) {
             const orientationWrapper = new THREE.Group();
             const tankVisual = loadedModels.tank.clone();
-            
-            // تصحيح التفاف الدبابة الموجهة برمجياً لتسير للأمام بالمدفع وليس بالعكس
-            tankVisual.rotation.y = Math.PI; 
-            orientationWrapper.add(tankVisual);
-            tGroup.add(orientationWrapper);
-            
+            tankVisual.rotation.y = Math.PI; orientationWrapper.add(tankVisual); tGroup.add(orientationWrapper);
             if(modelAnimations.tank.length > 0) {
                 const mixer = new THREE.AnimationMixer(tankVisual);
-                const action = mixer.clipAction(modelAnimations.tank[0]);
-                action.play();
-                tGroup.userData.mixer = mixer;
-                activeMixers.push(mixer);
+                mixer.clipAction(modelAnimations.tank[0]).play();
+                tGroup.userData.mixer = mixer; activeMixers.push(mixer);
             }
         } else {
             const base = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.9, 3.6), new THREE.MeshStandardMaterial({ color: 0x1f4024 })); base.position.y = 0.45; tGroup.add(base);
-            const turret = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 1.5), new THREE.MeshStandardMaterial({ color: 0x0a140d })); turret.position.set(0, 1.15, -0.2); tGroup.add(turret);
-            const cannon = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.2), new THREE.MeshStandardMaterial({ color: 0x556655 })); cannon.rotation.x = Math.PI / 2; cannon.position.set(0, 1.15, 1.2); tGroup.add(cannon);
         }
         tGroup.position.set(fact.position.x, 0, fact.position.z + 5.5);
         tGroup.userData = Object.assign({ type: 'tank', targetX: tGroup.position.x, targetZ: tGroup.position.z + 4, radius: 2.0 }, tGroup.userData);
-        scene.add(tGroup); units.push(tGroup); msg("💥 الدبابة الهجومية ألطاي جاهزة للقتال.");
+        scene.add(tGroup); units.push(tGroup); msg("💥 الدبابة الهجومية الثقيلة جاهزة للقتال.");
     }, fact);
 };
 
 function startBuildMode(type) {
-    let cost = type === 'factory' ? 600 : 800; if (money < cost) { msg("عفواً، Morken Generals: الموارد غير كافية!"); return; }
+    let cost = type === 'factory' ? 600 : 800; if (money < cost) { msg("عفواً، الموارد غير كافية للمشروع الجديد!"); return; }
     buildMode = type; buildGhost.visible = true; playSFX('click');
 }
 document.getElementById('btn-factory').onclick = () => startBuildMode('factory');
@@ -701,26 +709,19 @@ function startConstructionUnderground(type, x, z) {
     const bGroup = new THREE.Group();
     
     if (loadedModels[type]) {
-        const structVisual = loadedModels[type].clone();
-        bGroup.add(structVisual);
-        
+        const structVisual = loadedModels[type].clone(); bGroup.add(structVisual);
         if(modelAnimations[type].length > 0) {
             const mixer = new THREE.AnimationMixer(structVisual);
-            const action = mixer.clipAction(modelAnimations[type][0]);
-            action.play();
-            bGroup.userData.mixer = mixer;
-            activeMixers.push(mixer);
+            mixer.clipAction(modelAnimations[type][0]).play();
+            bGroup.userData.mixer = mixer; activeMixers.push(mixer);
         }
         bGroup.userData = Object.assign({ type: type, progress: 0, radius: type === 'factory' ? 6.5 : 4.5, isDemolishing: false, lastIncomeTime: 0 }, bGroup.userData);
     } else {
         if (type === 'factory') {
             const factoryBody = new THREE.Mesh(geometries.factory, new THREE.MeshStandardMaterial({ color: 0x5e6b58 })); factoryBody.position.y = 2.25; bGroup.add(factoryBody);
-            const chimney = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 4), new THREE.MeshStandardMaterial({ color: 0x1a2118 })); chimney.position.set(-3.5, 5, -2); bGroup.add(chimney);
-            const door = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.4, 0.2), new THREE.MeshStandardMaterial({ color: 0x111610 })); door.position.set(0, 0.8, 4.3); bGroup.add(door);
-            bGroup.userData = { type: type, progress: 0, radius: 6.5, isProducing: false, doorTargetY: 0.8, doorMesh: door, isDemolishing: false };
+            bGroup.userData = { type: type, progress: 0, radius: 6.5, isProducing: false, doorTargetY: 0.8, doorMesh: null, isDemolishing: false };
         } else {
             const derrickBody = new THREE.Mesh(geometries.oil, new THREE.MeshStandardMaterial({ color: 0x1f2620 })); derrickBody.position.y = 3.5; bGroup.add(derrickBody);
-            const pumpRig = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 5), new THREE.MeshStandardMaterial({ color: 0x475449 })); pumpRig.position.set(0, 7, 0); bGroup.add(pumpRig);
             bGroup.userData = { type: type, progress: 0, radius: 4.5, lastIncomeTime: 0, isDemolishing: false };
         }
     }
@@ -739,6 +740,7 @@ function cancelSelection() {
 function updateUI() { document.getElementById('money-txt').innerText = money; }
 
 function drawMinimap() {
+    if(graphicQuality === 'potato') return; // تعطيل رسم الخريطة المصغرة لرفع الإطارات على الأجهزة الضعيفة جداً
     mCtx.clearRect(0, 0, 110, 110); const mapScale = 0.5; const cx = 55, cy = 55;
     mCtx.fillStyle = '#ffffff'; mCtx.fillRect(cx + camera.position.x * mapScale - 1, cy + camera.position.z * mapScale - 1, 3, 3);
     structures.forEach(s => { 
@@ -758,7 +760,10 @@ function animate() {
     const speedFactor = 12.0 * delta * gameSpeedModifier;
     const unitSpeedFactor = 14.0 * delta * gameSpeedModifier;
 
-    // تحديث المحركات الحركية المرفقة بملفات الـ GLB بشكل فوري ودقيق
+    // معالجة حركة الكاميرا من كيبورد الكمبيوتر
+    handleKeyboardCameraUpdate(delta);
+
+    // تحديث المحركات الحركية للمجسمات 
     activeMixers.forEach(mixer => mixer.update(delta * gameSpeedModifier));
 
     if (radarPart) radarPart.rotation.y += 0.04 * gameSpeedModifier;
@@ -775,7 +780,7 @@ function animate() {
         if (dozer.userData.currentProject) {
             const proj = dozer.userData.currentProject;
             if (proj.userData.progress < 100) { proj.userData.progress += 0.5 * gameSpeedModifier; proj.position.y = -7 + (proj.userData.progress / 100) * 7; } 
-            else { proj.userData.progress = 100; dozer.userData.currentProject = null; msg(`🏭 تم الانتهاء من الأعمال الإنشائية في الموقع الهيكلي.`); }
+            else { proj.userData.progress = 100; dozer.userData.currentProject = null; msg(`🏭 تم اكتمال بناء المنشأة التكتيكية الحيوية.`); }
         }
     });
 
@@ -783,7 +788,7 @@ function animate() {
         const struct = structures[i];
         if (struct.userData.isDemolishing) {
             struct.position.y -= 0.08 * gameSpeedModifier;
-            if (Math.random() < 0.5) createSmokeParticle(struct.position, 1, 0x1c211a);
+            if (Math.random() < 0.4) createSmokeParticle(struct.position, 1, 0x1c211a);
             if (struct.position.y <= -7) { 
                 if(struct.userData.mixer) {
                     const idx = activeMixers.indexOf(struct.userData.mixer);
@@ -794,7 +799,6 @@ function animate() {
             continue;
         }
         if (struct.userData.type === 'oil' && struct.userData.progress >= 100) {
-            if(struct.children[1] && !loadedModels.oil) struct.children[1].rotation.z = Math.sin(time * 4 * gameSpeedModifier) * 0.2;
             if (Math.random() < 0.1) createSmokeParticle(struct.position, 7.5);
             if (time - struct.userData.lastIncomeTime > 3.0 / gameSpeedModifier) {
                 struct.userData.lastIncomeTime = time; money += 50; updateUI();
@@ -802,11 +806,8 @@ function animate() {
             }
         }
         if (struct.userData.type === 'factory' && struct.userData.progress >= 100) {
-            if(struct.userData.doorMesh) {
-                const door = struct.userData.doorMesh; door.position.y += (struct.userData.doorTargetY - door.position.y) * 0.1 * gameSpeedModifier;
-            }
             if (struct.userData.isProducing && Math.random() < 0.25) {
-                const chimneyPos = new THREE.Vector3(-3.5, 5, -2).add(struct.position); createSmokeParticle(chimneyPos, 1.5);
+                createSmokeParticle(struct.position, 1.5);
             }
         }
     }
