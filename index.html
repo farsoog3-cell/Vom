@@ -20,94 +20,7 @@
             position: fixed; inset: 0; background: #000; z-index: 999;
             display: none; flex-direction: column; align-items: center; justify-content: center; color: var(--zh-green); text-align: center;
         }
-        @media (max-width: 768px) and (orientation: portrait) { #rotate-alert { display: flex; } }
-
-        /* ====================================================
-           شاشة واجهة التحكم بالبداية (Main Menu Screen) الحربية
-           ==================================================== */
-        #start-screen {
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(circle, rgba(10,30,12,0.6) 0%, rgba(3,10,4,1) 100%);
-            z-index: 500;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            pointer-events: all;
-            color: var(--zh-green);
-            transition: opacity 0.5s ease;
-        }
-        
-        h1.game-title {
-            font-size: 3rem;
-            margin: 0;
-            letter-spacing: 4px;
-            text-shadow: 0 0 15px var(--zh-green);
-            font-weight: bold;
-        }
-        
-        .menu-subtitle {
-            font-size: 0.9rem;
-            color: #fff;
-            letter-spacing: 2px;
-            margin-bottom: 25px;
-            opacity: 0.8;
-        }
-
-        .war-card {
-            background: rgba(4, 15, 6, 0.9);
-            border: 2px solid var(--zh-border);
-            padding: 30px;
-            min-width: 320px;
-            box-shadow: 0 0 30px rgba(0, 255, 51, 0.2);
-            text-align: center;
-            clip-path: polygon(0 0, 93% 0, 100% 7%, 100% 100%, 7% 100%, 0 93%);
-        }
-
-        .setting-group {
-            margin-bottom: 20px;
-        }
-
-        .war-label {
-            font-size: 13px;
-            color: #bdc581;
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .enemy-input {
-            background: #020a03;
-            border: 1px solid var(--zh-green);
-            color: var(--zh-green);
-            padding: 8px;
-            width: 70px;
-            text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            font-family: monospace;
-        }
-
-        .btn-engage {
-            background: #004400;
-            border: 2px solid var(--zh-green);
-            color: #fff;
-            padding: 12px 35px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-            box-shadow: 0 0 10px rgba(0, 255, 51, 0.3);
-            transition: all 0.2s ease;
-        }
-
-        .btn-engage:hover {
-            background: var(--zh-green);
-            color: #000;
-            box-shadow: 0 0 20px var(--zh-green);
-        }
+        @media (orientation: portrait) { #rotate-alert { display: flex; } }
 
         /* شريط واجهة التحكم السفلي */
         #command-bar { 
@@ -115,7 +28,6 @@
             background: var(--zh-bg); border-top: 3px solid var(--zh-border);
             display: grid; grid-template-columns: 160px 1fr 240px; padding: 0;
             box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
-            display: none; /* مخفي حتى تبدأ اللعبة */
         }
 
         #radar-section { border-right: 2px solid var(--zh-border); background: #020803; position: relative; display: flex; align-items: center; justify-content: center; }
@@ -148,13 +60,15 @@
         .btn-zh-grid .cost-tag { color: var(--zh-green); font-size: 8px; font-family: Arial, sans-serif; }
         .build-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--zh-green); width: 0%; }
 
-        #money-panel { position: absolute; top: 15px; right: 20px; color: var(--zh-green); background: var(--zh-bg); padding: 5px 15px; border: 1px solid var(--zh-border); font-size: 14px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px; display: none; }
+        #money-panel { position: absolute; top: 15px; right: 20px; color: var(--zh-green); background: var(--zh-bg); padding: 5px 15px; border: 1px solid var(--zh-border); font-size: 14px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px; }
         
-        .top-btn { position: absolute; top: 15px; background: var(--zh-bg); color: var(--zh-green); border: 1px solid var(--zh-border); width: 36px; height: 36px; cursor: pointer; pointer-events: all; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: none; }
+        /* أزرار الزوايا العلوية اليسارية */
+        .top-btn { position: absolute; top: 15px; background: var(--zh-bg); color: var(--zh-green); border: 1px solid var(--zh-border); width: 36px; height: 36px; cursor: pointer; pointer-events: all; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .top-btn:hover { background: rgba(0,255,51,0.1); }
         #fullscreen-btn { left: 15px; }
         #settings-btn { left: 60px; }
 
+        /* نافذة الإعدادات العسكرية الكلاسيكية */
         #settings-menu {
             position: absolute; inset: 0; margin: auto; width: 340px; height: 300px;
             background: var(--zh-bg); border: 2px solid var(--zh-green);
@@ -173,37 +87,11 @@
         #notification-container { position: absolute; top: 70px; left: 15px; width: 280px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 200; }
         .toast-msg { background: var(--zh-bg); color: #fff; border-right: 4px solid var(--zh-green); padding: 8px 12px; font-size: 11px; font-weight: bold; text-align: right; box-shadow: 0 4px 10px rgba(0,0,0,0.5); opacity: 0; transform: translateY(-10px); transition: all 0.2s ease; }
         .toast-msg.show { opacity: 1; transform: translateY(0); }
-
-        /* علامة القنص المتقدمة للاشتباك وإطلاق النار */
-        #crosshair {
-            position: absolute; top: 50%; left: 50%; width: 20px; height: 20px;
-            transform: translate(-50%, -50%); z-index: 50; pointer-events: none; display: none;
-        }
-        #crosshair::before, #crosshair::after { content: ''; position: absolute; background: var(--zh-green); }
-        #crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
-        #crosshair::after { left: 9px; top: 0; width: 2px; height: 20px; }
     </style>
 </head>
 <body>
 
 <div id="rotate-alert">🔄 Please Rotate Your Device for Battle Command</div>
-
-<!-- واجهة البداية التكتيكية المضافة للتحكم وتحديد المعركة -->
-<div id="start-screen">
-    <h1 class="game-title">MORKEN GENERALS</h1>
-    <div class="menu-subtitle">ZERO HOUR INTERACTIVE // نظام الإطلاق التكتيكي</div>
-    <div class="war-card">
-        <div class="setting-group">
-            <span class="war-label">نظام إدارة المعركة</span>
-            <div style="color: #fff; font-size: 13px;">[ طـور فـردي / SINGLEPLAYER ]</div>
-        </div>
-        <div class="setting-group">
-            <label class="war-label" for="enemy-count">تحديد عدد جبهات الأعداء (HOSTILES)</label>
-            <input type="number" id="enemy-count" class="enemy-input" min="1" max="15" value="4">
-        </div>
-        <button class="btn-engage" onclick="initializeBattlefield()">ENGAGE // إرسال الأوامر وبدء المعركة</button>
-    </div>
-</div>
 
 <div id="ui-layer">
     <div id="money-panel">💵 <span id="money-txt">3000</span></div>
@@ -281,8 +169,6 @@
     </div>
 </div>
 
-<div id="crosshair"></div>
-
 <script type="importmap"> { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } } </script>
 
 <script type="module">
@@ -322,30 +208,7 @@ function playSFX(type) {
     }
 }
 
-// تعديل تشغيل الصوت عند الضغط على زر التفاعل في قائمة البداية لضمان الأداء
-window.initializeBattlefield = function() {
-    if(!bgMusic.isPlaying) playMusic();
-    
-    // استخراج أعداد الأعداء من المدخلات
-    const eCount = parseInt(document.getElementById('enemy-count').value) || 4;
-    
-    // إخفاء لوحة البداية وتفعيل واجهات ساحة المعركة بالكامل
-    document.getElementById('start-screen').style.opacity = '0';
-    setTimeout(() => {
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('command-bar').style.display = 'grid';
-        document.getElementById('money-panel').style.display = 'flex';
-        document.getElementById('fullscreen-btn').style.display = 'flex';
-        document.getElementById('settings-btn').style.display = 'flex';
-        document.getElementById('crosshair').style.display = 'block';
-        battleActive = true;
-        
-        // توليد معسكرات وبنايات الأعداء بناءً على مدخلات لوحة التحكم
-        spawnEnemyFortresses(eCount);
-    }, 500);
-    playSFX('click');
-    msg("⚔️ تم تحميل نظام الجنرال.. القوات رهن إشارتك!");
-};
+window.addEventListener('click', () => { if(!bgMusic.isPlaying) playMusic(); }, { once: true });
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x22301a);
@@ -360,13 +223,15 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
+// --- مصفوفة مخصصة لمتابعة خلاطات الأنيميشن (Animation Mixers) ---
 const activeMixers = [];
-const customAnimations = { dozer: [], factory: [], oil: [], tank: [], infantry: [] };
 
+// --- مستدعي المجسمات ثلاثية الأبعاد (GLTF Loader) ---
 const gltfLoader = new GLTFLoader();
 const loadedModels = { hq: null, dozer: null, factory: null, oil: null, tank: null, infantry: null };
 const modelAnimations = { hq: [], dozer: [], factory: [], oil: [], tank: [], infantry: [] };
 
+// ربط المسارات الرسمية لملفات الـ GLB
 const modelPaths = {
     hq: './models/command_center.glb',        
     dozer: './models/turkish_dozer.glb',      
@@ -376,21 +241,20 @@ const modelPaths = {
     infantry: './models/turkish_soldier.glb'  
 };
 
-const animationPaths = {
-    dozer: './models/dozer_walk_anim.glb',
-    tank: './models/tank_drive_anim.glb',
-    infantry: './models/soldier_run_anim.glb'
-};
-
+// دالة تحميل وتخزين بنية المجسم والأنيميشن الخاص به
 function loadGameModels(type, path) {
     gltfLoader.load(path, 
         (gltf) => { 
             loadedModels[type] = gltf.scene; 
             modelAnimations[type] = gltf.animations || [];
+            console.log(`تم تحميل الملف والأنيميشن لـ: ${type}`);
+            
             if(type === 'hq' && structures.length > 0) {
                 const existingHq = structures.find(s => s.userData.type === 'hq');
                 if(existingHq) {
                     while(existingHq.children.length > 0){ existingHq.remove(existingHq.children[0]); }
+                    
+                    // تصحيح اتجاه الـ HQ الخارجي إذا لزم الأمر
                     const wrapper = new THREE.Group();
                     const hqClone = gltf.scene.clone();
                     wrapper.add(hqClone);
@@ -407,7 +271,7 @@ function loadGameModels(type, path) {
             }
         },
         undefined,
-        (error) => { console.log(`استخدام الهياكل الهندسية الافتراضية لـ [${type}]`); }
+        (error) => { console.log(`تنبيه: سيتم استخدام المجسم الاحتياطي لـ [${type}]`); }
     );
 }
 Object.entries(modelPaths).forEach(([type, path]) => loadGameModels(type, path));
@@ -435,7 +299,24 @@ document.getElementById('volume-sfx').oninput = (e) => { sfxAudio.setVolume(e.ta
 
 let gameSpeedModifier = 1.0;
 let graphicQualityHigh = true;
-let battleActive = false; // متغير لتأكيد حالة بدء القتال
+
+document.getElementById('game-speed').oninput = (e) => { gameSpeedModifier = e.target.value / 100; };
+document.getElementById('fx-low').onclick = () => {
+    graphicQualityHigh = false;
+    document.getElementById('fx-low').classList.add('active');
+    document.getElementById('fx-high').classList.remove('active');
+    renderer.shadowMap.enabled = false;
+    scene.fog = null;
+    playSFX('click');
+};
+document.getElementById('fx-high').onclick = () => {
+    graphicQualityHigh = true;
+    document.getElementById('fx-high').classList.add('active');
+    document.getElementById('fx-low').classList.remove('active');
+    renderer.shadowMap.enabled = true;
+    scene.fog = new THREE.FogExp2(0x22301a, 0.0025);
+    playSFX('click');
+};
 
 // --- Lighting ---
 const ambient = new THREE.AmbientLight(0xffffff, 0.7); scene.add(ambient);
@@ -469,12 +350,7 @@ const mCanvas = document.getElementById('minimap-canvas'); const mCtx = mCanvas.
 // --- Game Variables ---
 let money = 3000; let selectedObject = null; let buildMode = null; let tacticalActionMode = null; let radarPart = null;
 const dozers = []; const structures = []; const units = []; const smokeParticles = []; const floatingTexts = [];
-const enemyBuildings = []; // مصفوفة لتتبع قتال وهدم مباني الأعداء المعززة بالكامل
 const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
-
-const keysPressed = {};
-window.addEventListener('keydown', (e) => { keysPressed[e.key.toLowerCase()] = true; });
-window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
 
 const geometries = {
     dozer: new THREE.BoxGeometry(2.6, 1.5, 3.6),
@@ -494,117 +370,25 @@ function msg(text) {
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 250); }, 2500);
 }
 
-function playUnitAnimation(unitGroup) {
-    if(unitGroup.userData.action && !unitGroup.userData.action.isRunning()) {
-        unitGroup.userData.action.play();
-    }
-}
-function stopUnitAnimation(unitGroup) {
-    if(unitGroup.userData.action && unitGroup.userData.action.isRunning()) {
-        unitGroup.userData.action.stop();
-    }
-}
-
-// --- توليد قلاع ومباني الأعداء القابلة للهدم والقتال التام ---
-function spawnEnemyFortresses(count) {
-    for (let k = 0; k < count; k++) {
-        const enemyGroup = new THREE.Group();
-        
-        // بناء هيكل عسكري معادي أحمر اللون وقابل للتفكك والهدم
-        const baseGeo = new THREE.BoxGeometry(9, 6, 9);
-        const baseMat = new THREE.MeshStandardMaterial({ color: 0xaa2222, roughness: 0.7 });
-        const baseMesh = new THREE.Mesh(baseGeo, baseMat);
-        baseMesh.position.y = 3;
-        baseMesh.castShadow = baseMesh.receiveShadow = true;
-        enemyGroup.add(baseMesh);
-        
-        // إضافة برج دفاعي صغير فوق المبنى
-        const topGeo = new THREE.CylinderGeometry(2, 2.5, 3, 8);
-        const topMesh = new THREE.Mesh(topGeo, new THREE.MeshStandardMaterial({ color: 0x551111 }));
-        topMesh.position.y = 7;
-        enemyGroup.add(topMesh);
-
-        // توزيع عشوائي متناسق أمام معسكر اللاعب وممتد في عمق الساحة للقتال
-        const posX = (Math.random() - 0.5) * 80;
-        const posZ = -30 - (Math.random() * 45);
-        enemyGroup.position.set(posX, 0, posZ);
-        
-        // تخزين بيانات الصحة والتدمير والفيزياء البسيطة للهدم
-        enemyGroup.userData = { type: 'enemy_outpost', hp: 100, radius: 5.5, isDemolishing: false };
-        
-        scene.add(enemyGroup);
-        enemyBuildings.push(enemyGroup);
-    }
-}
-
-// --- آلية طلاق النار الهجومي والقتال التكتيكي للجنرال ---
-function fireTacticalCannon(targetPoint) {
-    playSFX('explosion');
-    
-    // تصنيع قذيفة نارية مرئية تندفع من الكاميرا
-    const projectileGeo = new THREE.SphereGeometry(0.6, 16, 16);
-    const projectileMat = new THREE.MeshBasicMaterial({ color: 0xff3300 });
-    const projectile = new THREE.Mesh(projectileGeo, projectileMat);
-    
-    // بداية انطلاق طلقة النار من موقع القائد الحالي
-    projectile.position.set(camera.position.x, camera.position.y - 15, camera.position.z);
-    scene.add(projectile);
-    
-    // تحريك المقذوف بعملية انسيابية نحو الهدف وضرب المباني
-    const startPos = projectile.position.clone();
-    const endPos = new THREE.Vector3(targetPoint.x, 0.5, targetPoint.z);
-    let progress = 0;
-    
-    function updateShot() {
-        progress += 0.08 * gameSpeedModifier;
-        projectile.position.lerpVectors(startPos, endPos, progress);
-        
-        if(progress >= 1.0) {
-            scene.remove(projectile);
-            // إحداث دوائر انفجارية مرئية لتأكيد القتال وتدمير البنى التحتية للمباني
-            spawnFloatingText("💥 BOOM", endPos, '#ff3300');
-            for(let i=0; i<8; i++) createSmokeParticle(endPos, 1, 0x111111);
-            
-            // التحقق من اصطدام طلقة النار بمباني الأعداء وهدمها
-            enemyBuildings.forEach((fort, index) => {
-                if(!fort.userData.isDemolishing) {
-                    const dist = fort.position.distanceTo(endPos);
-                    if(dist < fort.userData.radius + 2) {
-                        fort.userData.hp -= 35; // خصم الصحة عند القتال
-                        spawnFloatingText(`HP: ${fort.userData.hp}%`, fort.position, '#ff5555');
-                        
-                        // عند نفاد الصحة.. يتم تدمير وهدم المبنى وتفكيك خرسانته بالكامل
-                        if(fort.userData.hp <= 0) {
-                            fort.userData.isDemolishing = true;
-                            msg("🎯 تم تدمير وإبادة منشأة تكتيكية تابعة للأعداء!");
-                            money += 500; // مكافأة مالية للقتال الناجح
-                            updateUI();
-                        }
-                    }
-                }
-            });
-        } else {
-            requestAnimationFrame(updateShot);
-        }
-    }
-    updateShot();
-}
-
-function createDozerMesh(angleOffset = 180) {
+// --- Spawning Logic (تم تصحيح اتجاه المشي هنا) ---
+function createDozerMesh() {
     const group = new THREE.Group();
+    
     if (loadedModels.dozer) {
+        // إنشاء حاوية لتعديل محور الاتجاه الخلفي للـ GLB ليصبح أمامياً متوافقاً مع الحسابات الرياضية
         const orientationWrapper = new THREE.Group();
         const dozerVisual = loadedModels.dozer.clone();
-        orientationWrapper.rotation.y = THREE.MathUtils.degToRad(angleOffset); 
+        
+        // تدوير المجسم الداخلي 180 درجة إذا كان يمشي بظهره
+        dozerVisual.rotation.y = Math.PI; 
         orientationWrapper.add(dozerVisual);
         group.add(orientationWrapper);
         
-        let finalAnim = modelAnimations.dozer.length > 0 ? modelAnimations.dozer[0] : (customAnimations.dozer.length > 0 ? customAnimations.dozer[0] : null);
-        if(finalAnim) {
+        if(modelAnimations.dozer.length > 0) {
             const mixer = new THREE.AnimationMixer(dozerVisual);
-            const action = mixer.clipAction(finalAnim);
+            const action = mixer.clipAction(modelAnimations.dozer[0]);
+            action.play();
             group.userData.mixer = mixer;
-            group.userData.action = action;
             activeMixers.push(mixer);
         }
     } else {
@@ -622,6 +406,7 @@ function createHQStructure(x, z) {
     if (loadedModels.hq) {
         const hqVisual = loadedModels.hq.clone();
         bGroup.add(hqVisual);
+        
         if(modelAnimations.hq.length > 0) {
             const mixer = new THREE.AnimationMixer(hqVisual);
             const action = mixer.clipAction(modelAnimations.hq[0]);
@@ -641,7 +426,7 @@ function createHQStructure(x, z) {
 }
 
 createHQStructure(0, 0);
-const firstDozer = createDozerMesh(180); firstDozer.position.set(-15, 0, 15);
+const firstDozer = createDozerMesh(); firstDozer.position.set(-15, 0, 15);
 firstDozer.userData.targetX = -15; firstDozer.userData.targetZ = 15;
 scene.add(firstDozer); dozers.push(firstDozer);
 
@@ -662,38 +447,27 @@ function createSmokeParticle(pos, heightOffset = 4, customColor = 0x556655) {
     smokeParticles.push({ mesh: pMesh, vx: (Math.random() - 0.5) * 0.03, vy: Math.random() * 0.04 + 0.05, vz: (Math.random() - 0.5) * 0.03, life: 1.0 });
 }
 
-// --- Interaction Engine ---
+// --- Interaction ---
 let isDragging = false, prevX, prevY;
-
-function onPointerDown(clientX, clientY) {
-    if(!battleActive) return; // حظر التفاعل داخل الساحة حتى إنهاء إعدادات لوحة تحكم البداية
-    if(clientY > window.innerHeight - 140 || settingsMenu.style.display === 'flex') return;
-    isDragging = true; prevX = clientX; prevY = clientY;
-    mouse.x = (clientX / window.innerWidth) * 2 - 1; mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+window.addEventListener('touchstart', (e) => {
+    if(e.touches[0].clientY > window.innerHeight - 140 || settingsMenu.style.display === 'flex') return;
+    isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
+    mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
     handleInteraction();
-}
+});
 
-function onPointerMove(clientX, clientY) {
-    mouse.x = (clientX / window.innerWidth) * 2 - 1; mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-    
-    if (isDragging && !buildMode && !selectedObject) {
-        camera.position.x -= (clientX - prevX) * 0.14; camera.position.z -= (clientY - prevY) * 0.14;
-        prevX = clientX; prevY = clientY;
-    } 
-    
-    if (buildMode) {
+window.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    if (!buildMode && !selectedObject) {
+        camera.position.x -= (e.touches[0].clientX - prevX) * 0.14; camera.position.z -= (e.touches[0].clientY - prevY) * 0.14;
+    } else if (buildMode) {
+        mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObject(ground);
         if(intersects.length > 0) buildGhost.position.set(Math.round(intersects[0].point.x/2)*2, 0.1, Math.round(intersects[0].point.z/2)*2);
     }
-}
-
-window.addEventListener('touchstart', (e) => { onPointerDown(e.touches[0].clientX, e.touches[0].clientY); });
-window.addEventListener('touchmove', (e) => { onPointerMove(e.touches[0].clientX, e.touches[0].clientY); });
+    prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
+});
 window.addEventListener('touchend', () => { isDragging = false; });
-
-window.addEventListener('mousedown', (e) => { onPointerDown(e.clientX, e.clientY); });
-window.addEventListener('mousemove', (e) => { onPointerMove(e.clientX, e.clientY); });
-window.addEventListener('mouseup', () => { isDragging = false; });
 
 function checkCollisions(unitObj) {
     structures.forEach(struct => {
@@ -715,16 +489,7 @@ function showWaypoint(x, z, color = 0x00ff33) {
 
 function handleInteraction() {
     raycaster.setFromCamera(mouse, camera);
-    const allObjects = [...dozers, ...structures, ...units, ...enemyBuildings];
-
-    // تفعيل إطلاق النار والقتال المباشر وتدمير المباني التابع للمظهر الحربي الشامل
-    if (!buildMode && !selectedObject && tacticalActionMode === null) {
-        const groundIntersects = raycaster.intersectObject(ground);
-        if (groundIntersects.length > 0) {
-            fireTacticalCannon(groundIntersects[0].point);
-            return;
-        }
-    }
+    const allObjects = [...dozers, ...structures, ...units];
 
     if (tacticalActionMode && selectedObject) {
         const intersects = raycaster.intersectObjects(allObjects, true);
@@ -774,9 +539,7 @@ function handleInteraction() {
     if (intersects.length > 0) {
         let rootObj = intersects[0].object;
         while(rootObj.parent && rootObj.parent !== scene) rootObj = rootObj.parent;
-        
-        // منع اختيار مباني الأعداء أو المباني المهدمة لتوجيه جرافة اللاعب
-        if(rootObj.userData.isDemolishing || rootObj.userData.type === 'enemy_outpost') { cancelSelection(); return; }
+        if(rootObj.userData.isDemolishing) { cancelSelection(); return; }
 
         selectedObject = rootObj; updateProfileUI(selectedObject.userData.type);
         playSFX('click');
@@ -855,7 +618,7 @@ function triggerProductionTimer(btnId, duration, onComplete, factoryObj) {
 document.getElementById('btn-spawn-dozer').onclick = () => {
     if (money < 1000) return; money -= 1000; updateUI(); playSFX('click');
     triggerProductionTimer('btn-spawn-dozer', 4.0, () => {
-        const dMesh = createDozerMesh(180); dMesh.position.set(0, 0, 9);
+        const dMesh = createDozerMesh(); dMesh.position.set(0, 0, 9);
         dMesh.userData.targetX = (Math.random() * 12) - 6; dMesh.userData.targetZ = 15;
         scene.add(dMesh); dozers.push(dMesh); msg("🚜 تم تدشين جرافة صيانة وبناء عسكرية جديدة.");
     }, null);
@@ -870,9 +633,19 @@ document.getElementById('btn-infantry').onclick = () => {
         if (loadedModels.infantry) {
             const orientationWrapper = new THREE.Group();
             const infVisual = loadedModels.infantry.clone();
-            orientationWrapper.rotation.y = Math.PI; 
+            
+            // تصحيح التفاف المشاة الخارجي بزاوية 180 درجة لمواجهة اتجاه المشي الصحيح (+Z)
+            infVisual.rotation.y = Math.PI;
             orientationWrapper.add(infVisual);
             uGroup.add(orientationWrapper);
+            
+            if(modelAnimations.infantry.length > 0) {
+                const mixer = new THREE.AnimationMixer(infVisual);
+                const action = mixer.clipAction(modelAnimations.infantry[0]);
+                action.play();
+                uGroup.userData.mixer = mixer;
+                activeMixers.push(mixer);
+            }
         } else {
             const uMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.8), new THREE.MeshStandardMaterial({ color: 0x11aa22 }));
             uMesh.position.y = 0.9; uGroup.add(uMesh);
@@ -892,9 +665,19 @@ document.getElementById('btn-tank').onclick = () => {
         if (loadedModels.tank) {
             const orientationWrapper = new THREE.Group();
             const tankVisual = loadedModels.tank.clone();
-            orientationWrapper.rotation.y = Math.PI; 
+            
+            // تصحيح التفاف الدبابة الموجهة برمجياً لتسير للأمام بالمدفع وليس بالعكس
+            tankVisual.rotation.y = Math.PI; 
             orientationWrapper.add(tankVisual);
             tGroup.add(orientationWrapper);
+            
+            if(modelAnimations.tank.length > 0) {
+                const mixer = new THREE.AnimationMixer(tankVisual);
+                const action = mixer.clipAction(modelAnimations.tank[0]);
+                action.play();
+                tGroup.userData.mixer = mixer;
+                activeMixers.push(mixer);
+            }
         } else {
             const base = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.9, 3.6), new THREE.MeshStandardMaterial({ color: 0x1f4024 })); base.position.y = 0.45; tGroup.add(base);
             const turret = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 1.5), new THREE.MeshStandardMaterial({ color: 0x0a140d })); turret.position.set(0, 1.15, -0.2); tGroup.add(turret);
@@ -920,6 +703,14 @@ function startConstructionUnderground(type, x, z) {
     if (loadedModels[type]) {
         const structVisual = loadedModels[type].clone();
         bGroup.add(structVisual);
+        
+        if(modelAnimations[type].length > 0) {
+            const mixer = new THREE.AnimationMixer(structVisual);
+            const action = mixer.clipAction(modelAnimations[type][0]);
+            action.play();
+            bGroup.userData.mixer = mixer;
+            activeMixers.push(mixer);
+        }
         bGroup.userData = Object.assign({ type: type, progress: 0, radius: type === 'factory' ? 6.5 : 4.5, isDemolishing: false, lastIncomeTime: 0 }, bGroup.userData);
     } else {
         if (type === 'factory') {
@@ -954,10 +745,6 @@ function drawMinimap() {
         if(s.userData.isDemolishing) return;
         mCtx.fillStyle = s.userData.type === 'hq' ? '#00ff33' : (s.userData.type === 'factory' ? '#ffaa00' : '#00aaff'); mCtx.fillRect(cx + s.position.x * mapScale - 2, cy + s.position.z * mapScale - 2, 5, 5); 
     });
-    enemyBuildings.forEach(eb => {
-        if(eb.userData.isDemolishing) return;
-        mCtx.fillStyle = '#ff0000'; mCtx.fillRect(cx + eb.position.x * mapScale - 2, cy + eb.position.z * mapScale - 2, 4, 4);
-    });
     dozers.forEach(d => { mCtx.fillStyle = '#ffff00'; mCtx.fillRect(cx + d.position.x * mapScale - 1.5, cy + d.position.z * mapScale - 1.5, 3, 3); });
     units.forEach(u => { mCtx.fillStyle = u.userData.type === 'tank' ? '#ff3333' : '#00ff33'; mCtx.beginPath(); mCtx.arc(cx + u.position.x * mapScale, cy + u.position.z * mapScale, 1.5, 0, Math.PI*2); mCtx.fill(); });
 }
@@ -971,12 +758,7 @@ function animate() {
     const speedFactor = 12.0 * delta * gameSpeedModifier;
     const unitSpeedFactor = 14.0 * delta * gameSpeedModifier;
 
-    const camSpeed = 40.0 * delta;
-    if (keysPressed['w'] || keysPressed['arrowup']) camera.position.z -= camSpeed;
-    if (keysPressed['s'] || keysPressed['arrowdown']) camera.position.z += camSpeed;
-    if (keysPressed['a'] || keysPressed['arrowleft']) camera.position.x -= camSpeed;
-    if (keysPressed['d'] || keysPressed['arrowright']) camera.position.x += camSpeed;
-
+    // تحديث المحركات الحركية المرفقة بملفات الـ GLB بشكل فوري ودقيق
     activeMixers.forEach(mixer => mixer.update(delta * gameSpeedModifier));
 
     if (radarPart) radarPart.rotation.y += 0.04 * gameSpeedModifier;
@@ -987,12 +769,8 @@ function animate() {
         if (dist > 0.6) { 
             dozer.rotation.y = Math.atan2(dx, dz); 
             dozer.position.x += (dx / dist) * speedFactor; dozer.position.z += (dz / dist) * speedFactor; 
-            playUnitAnimation(dozer); 
         }
-        else {
-            stopUnitAnimation(dozer); 
-            if (dozer.userData.isBuilding) { dozer.userData.isBuilding = false; dozer.userData.currentProject = startConstructionUnderground(dozer.userData.buildingType, dozer.position.x, dozer.position.z); }
-        }
+        else if (dozer.userData.isBuilding) { dozer.userData.isBuilding = false; dozer.userData.currentProject = startConstructionUnderground(dozer.userData.buildingType, dozer.position.x, dozer.position.z); }
         checkCollisions(dozer);
         if (dozer.userData.currentProject) {
             const proj = dozer.userData.currentProject;
@@ -1000,16 +778,6 @@ function animate() {
             else { proj.userData.progress = 100; dozer.userData.currentProject = null; msg(`🏭 تم الانتهاء من الأعمال الإنشائية في الموقع الهيكلي.`); }
         }
     });
-
-    // تحديث هدم ومحاكاة قتال منشآت الأعداء
-    for (let i = enemyBuildings.length - 1; i >= 0; i--) {
-        const eb = enemyBuildings[i];
-        if(eb.userData.isDemolishing) {
-            eb.position.y -= 0.08 * gameSpeedModifier;
-            if (Math.random() < 0.6) createSmokeParticle(eb.position, 2, 0x221111);
-            if (eb.position.y <= -8) { scene.remove(eb); enemyBuildings.splice(i, 1); }
-        }
-    }
 
     for (let i = structures.length - 1; i >= 0; i--) {
         const struct = structures[i];
@@ -1058,9 +826,6 @@ function animate() {
         if (dist > 0.5) { 
             unit.rotation.y = Math.atan2(dx, dz); 
             unit.position.x += (dx / dist) * unitSpeedFactor; unit.position.z += (dz / dist) * unitSpeedFactor; 
-            playUnitAnimation(unit); 
-        } else {
-            stopUnitAnimation(unit); 
         }
         checkCollisions(unit);
     });
